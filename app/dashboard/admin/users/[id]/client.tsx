@@ -11,6 +11,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemHeader, ItemMedia,
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
 import { makeAuditLogClient } from "@/lib/actions/logs/makeAuditLogClient";
+import sendNotificationClient from "@/lib/actions/notifications/sendNotificationsClient";
 import { authClient, roles } from "@/lib/auth-client";
 import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
 import revalidateData from "@/lib/revalidateData";
@@ -65,6 +66,28 @@ export default function UserPageClient({user, sessions}: {user: User, sessions: 
                 })
             } else {
                 await makeAuditLogClient({userId: data!.user.id, code: "USER_EDITED", data: {user: {id: user.id, name: name}}});  
+                if (role !== user.role) {
+                    await sendNotificationClient({
+                        type: "USER_ROLE_CHANGED_ADMIN",
+                        user: {name: user.name},
+                        newRole: role!,
+                        triggerUser: {id: data!.user.id, name: data!.user.name},
+                        userGroup: "admins",
+                        link: `/dashboard/admin/users/${user.id}`,
+                    });
+                    await sendNotificationClient({
+                        type: "USER_ROLE_CHANGED_USER",
+                        newRole: role!,
+                        triggerUser: {id: data!.user.id, name: data!.user.name},
+                        specificUsers: [{
+                            id: user.id,
+                            name: user.name,
+                            email: user.email,
+                            notif_preferences: user.notif_preferences,
+                        }],
+                        link: `/dashboard`,
+                    });
+                }
                 toast.add({
                     title: "Success",
                     description: "User updated successfully.",

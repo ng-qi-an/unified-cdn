@@ -8,7 +8,7 @@ export default function DatabaseCreated(props: Parameters<typeof NotificationTyp
     return <EmailTemplate>
             <EmailSectionHero icon={DatabasePlus} title="A database was created." subtitle={<>{props.triggerUser.name} created a database with the name <strong>"{props.databaseName}"</strong>.</>} />
             <Section className="pt-4">
-                <Button href={props.link} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
+                <Button href={`${process.env.BETTER_AUTH_URL ?? ""}${props.link ?? ""}`} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
                     View Database
                 </Button>
             </Section>

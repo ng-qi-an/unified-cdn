@@ -6,6 +6,7 @@ import DashboardHeader from "@/components/navigation/DashboardHeader";
 import DashboardSectionHeader from "@/components/navigation/DashboardSectionHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { makeAuditLogClient } from "@/lib/actions/logs/makeAuditLogClient";
+import sendNotificationClient from "@/lib/actions/notifications/sendNotificationsClient";
 import { authClient } from "@/lib/auth-client";
 import { generateId } from "better-auth";
 import { Copy, RefreshCcw } from "lucide-react";
@@ -24,6 +26,7 @@ export default function ClientUsersPage({fetchedUsers}: {fetchedUsers: {email: s
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [sendPassword, setSendPassword] = useState(true);
     const [role, setRole] = useState<string>("user");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
@@ -85,6 +88,8 @@ export default function ClientUsersPage({fetchedUsers}: {fetchedUsers: {email: s
                 setIsSubmitting(false);
                 router.push("/dashboard/admin/users/"+newUser.user.id);
                 await makeAuditLogClient({userId: data!.user.id, code: "USER_CREATED", data: {user: {id: newUser.user.id, name: newUser.user.name}}});
+                await sendNotificationClient({type: "USER_CREATED_ADMIN", newUser: {name: newUser.user.name, role: role}, triggerUser: {id: data!.user.id, name: data!.user.name}, userGroup: "admins", link: `/dashboard/admin/users/${newUser.user.id}`});
+                await sendNotificationClient({type: "USER_CREATED_USER", newUser: {name: newUser.user.name, email: newUser.user.email, password: sendPassword ? password : undefined}, triggerUser: {id: data!.user.id, name: data!.user.name}, specificUsers: [{...newUser.user, notif_preferences: {email: {enabled: true, priority: ["low", "medium", "high"]}}}], link: `/auth/sign-in`});
                 return toast.add({
                     title: "User created",
                     description: "The user has been created successfully.",
@@ -129,6 +134,13 @@ export default function ClientUsersPage({fetchedUsers}: {fetchedUsers: {email: s
                                             </InputGroupButton>
                                         </InputGroupAddon>
                                     </InputGroup>
+                                </Field>
+                                <Field orientation="horizontal">
+                                    <div className="w-full space-y-1">
+                                        <FieldLabel htmlFor="sendPassword">Send password</FieldLabel>
+                                        <FieldDescription>Send the password to the new user's email</FieldDescription>
+                                    </div>
+                                    <Checkbox checked={sendPassword} id="sendPassword" onCheckedChange={(x) => setSendPassword(x)}/>
                                 </Field>
                                 <Field>
                                     <FieldLabel>Role</FieldLabel>

@@ -7,7 +7,7 @@ export default function EmailTemplate({children}: {children: React.ReactNode}){
         <Tailwind config={{
             presets: [pixelBasedPreset]
         }}>
-            <Body className="bg-gray-100 px-1">
+            <Body className="bg-gray-100 p-3">
                 <Container className="px-6 mx-auto pt-0 mt-0 bg-white max-w-[640px] font-sans">
                     <Section className="pt-2">
                         <Row>

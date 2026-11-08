@@ -8,7 +8,7 @@ export default function UserPasswordChangedAdmin(props: Parameters<typeof Notifi
     return <EmailTemplate>
             <EmailSectionHero icon={User} title="A user's password has been changed." subtitle={<>{props.triggerUser.name} changed the password for the user <strong>"{props.user.name}"</strong>.</>} />
             <Section className="pt-4">
-                <Button href={props.link} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
+                <Button href={`${process.env.BETTER_AUTH_URL ?? ""}${props.link ?? ""}`} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
                     View User
                 </Button>
             </Section>

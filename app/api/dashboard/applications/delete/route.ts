@@ -1,5 +1,6 @@
 import { deleteFiles } from "@/lib/actions/files/deleteFiles";
 import { makeAuditLog } from "@/lib/actions/logs/makeAuditLog";
+import sendNotification from "@/lib/actions/notifications/sendNotification";
 import { db } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors";
 import { errorToResponse, userHasPermissionServer, verifyUser } from "@/lib/permissions/serverPermissionHelpers";
@@ -25,6 +26,14 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
                     id: true,
                     key: true
                 }
+            },
+            owner: {
+                columns: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    notif_preferences: true
+                }
             }
         }
     })
@@ -39,6 +48,10 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
         }
         await db.delete(applications).where(eq(applications.id, appData.id));
         await makeAuditLog({userId: user.id, code: "APPLICATION_DELETED", data: {application: {id: appData.id, name: appData.name}, database: {id: appData.database?.id ?? "undefined", name: appData.database?.name ?? "Unknown database"}}});
+        await sendNotification("APPLICATION_DELETED_ADMIN", {userGroup: "admins", appName: appData.name, ownerName: appData.owner?.name ?? "Unknown User", triggerUser: {id: user.id, name: user.name}});
+        if (appData.owner) {
+            await sendNotification("APPLICATION_DELETED_USER", {specificUsers: [appData.owner], appName: appData.name, triggerUser: {id: user.id, name: user.name}});
+        }
         return Response.json({message: "Application deleted successfully!"}, {status: 200});
     } catch (error) {
         console.error("Error deleting app:", error);

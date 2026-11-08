@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export default function DeleteUserDialog({userId, open, onOpenChange}: {userId: string, open: boolean, onOpenChange: (open: boolean) => void}){
+export default function DeleteUserDialog({userId, userName, userEmail, open, onOpenChange}: {userId: string, userName: string, userEmail: string, open: boolean, onOpenChange: (open: boolean) => void}){
     const [showDeleteUserResult, setShowDeleteUserResult] = useState(false);
     const [deleteUserResult, setDeleteUserResult] = useState<{status: string, message: string, details?: {status: string, message: string}[]} | null>();
     const router = useRouter();

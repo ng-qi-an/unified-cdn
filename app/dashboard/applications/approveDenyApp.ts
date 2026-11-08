@@ -1,5 +1,6 @@
 'use server';
 import { makeAuditLog } from "@/lib/actions/logs/makeAuditLog";
+import sendNotification from "@/lib/actions/notifications/sendNotification";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { InsufficientPermissionsError, UnauthorisedError } from "@/lib/errors";
@@ -32,6 +33,14 @@ export async function approveDenyApp(appId: string, action: "approve" | "deny") 
             owner: {
                 columns: {
                     id: true,
+                    name: true,
+                    email: true,
+                    notif_preferences: true
+                }
+            },
+            database: {
+                columns: {
+                    id: true,
                     name: true
                 }
             }
@@ -49,6 +58,10 @@ export async function approveDenyApp(appId: string, action: "approve" | "deny") 
     } else {
         await makeAuditLog({userId: data.user.id, code: "APPLICATION_REVIEWED", data: {application: {id: appId, name: appData.name, owner: appData.owner}, approved: false}});
         await db.delete(applications).where(and(eq(applications.id, appId), eq(applications.status, "requested")));
+    }
+    await sendNotification("APPLICATION_REVIEWED_ADMIN", {userGroup: "admins", appName: appData.name, databaseName: appData.database?.name ?? "Unknown Database", appOwnerName: appData.owner?.name ?? "Unknown User", approved: action =="approve", triggerUser: {id: data.user.id, name: data.user.name}, link: action == "approve" ? `/dashboard/applications/${appData.id}` : undefined});
+    if (appData.owner) {
+        await sendNotification("APPLICATION_REVIEWED_USER", {specificUsers: [appData.owner], appName: appData.name, approved: action =="approve", triggerUser: {id: data.user.id, name: data.user.name}, link: action == "approve" ? `/dashboard/applications/${appData.id}` : undefined});
     }
     return { status: "OK", message: `Application ${action}d successfully` };
 }

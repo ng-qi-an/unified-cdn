@@ -26,7 +26,7 @@ export const auth = betterAuth({
                 defaultValue: {
                     email: {
                         enabled: true,
-                        priority: ["high", "medium"]
+                        priority: ["high", "medium"],
                     }
                 }
             }

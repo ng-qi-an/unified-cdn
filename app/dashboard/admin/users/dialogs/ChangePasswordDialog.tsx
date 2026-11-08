@@ -5,14 +5,16 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { toast } from "@/components/ui/toast";
 import { makeAuditLogClient } from "@/lib/actions/logs/makeAuditLogClient";
+import sendNotificationClient from "@/lib/actions/notifications/sendNotificationsClient";
 import { authClient } from "@/lib/auth-client";
 import { generateId } from "better-auth";
 import { Copy, RefreshCcw } from "lucide-react";
 import { useState } from "react";
 
-export default function ChangePasswordDialog({userId, userName, open, onOpenChange}: {userId: string, userName: string, open: boolean, onOpenChange: (open: boolean) => void}){
+export default function ChangePasswordDialog({userId, userName, userEmail, userNotifPreferences,  open, onOpenChange}: {userId: string, userName: string, userEmail: string, userNotifPreferences: any, open: boolean, onOpenChange: (open: boolean) => void}){
     const [password, setPassword] = useState("");
     const [revokeSessions, setRevokeSessions] = useState(true);
+    const [sendNewPassword, setSendNewPassword] = useState(true);
     const { data } = authClient.useSession();
     return <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
@@ -43,6 +45,8 @@ export default function ChangePasswordDialog({userId, userName, open, onOpenChan
                         }
                     }
                     await makeAuditLogClient({userId: data!.user.id, code: "USER_PASSWORD_CHANGED", data: {user: {id: userId, name: userName}}});
+                    await sendNotificationClient({type: "USER_PASSWORD_CHANGED_ADMIN", user: {name: userName}, triggerUser: {id: data!.user.id, name: data!.user.name}, userGroup: "admins", link: `/dashboard/admin/users/${userId}`});
+                    await sendNotificationClient({type: "USER_PASSWORD_CHANGED_USER", newPassword: sendNewPassword ? password : undefined, triggerUser: {id: data!.user.id, name: data!.user.name}, specificUsers: [{name: userName, id: userId, email: userEmail, notif_preferences: userNotifPreferences}], link: `/auth/sign-in`});
                     return toast.add({
                         title: "Success",
                         description: "The user's password has been changed successfully.",
@@ -79,7 +83,11 @@ export default function ChangePasswordDialog({userId, userName, open, onOpenChan
                     </Field>
                     <Field orientation="horizontal">
                         <FieldLabel htmlFor="revokeSessionsCheck">Revoke sessions</FieldLabel>
-                        <Checkbox id="revokeSessionsCheck" required checked={revokeSessions} onCheckedChange={(x) => setRevokeSessions(x)}/>
+                        <Checkbox id="revokeSessionsCheck" checked={revokeSessions} onCheckedChange={(x) => setRevokeSessions(x)}/>
+                    </Field>
+                    <Field orientation="horizontal">
+                        <FieldLabel htmlFor="sendNewPasswordCheck">Send new password</FieldLabel>
+                        <Checkbox id="sendNewPasswordCheck" checked={sendNewPassword} onCheckedChange={(x) => setSendNewPassword(x)}/>
                     </Field>
                 </FieldGroup>
                 <DialogFooter>

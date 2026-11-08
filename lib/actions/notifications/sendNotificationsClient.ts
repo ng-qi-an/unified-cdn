@@ -1,3 +1,4 @@
+'use server';
 import { NotificationType } from "./notificationTypes";
 import type { SendNotificationArgs } from "./sendNotification";
 import sendNotification from "./sendNotification";

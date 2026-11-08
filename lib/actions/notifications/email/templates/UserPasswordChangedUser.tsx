@@ -20,7 +20,7 @@ export default function UserPasswordChangedUser(props: Parameters<typeof Notific
             </div>}
             </Section>
             <Section className="pt-4 pr-8">
-                <Button href={props.link} className={`bg-black ${props.newPassword && "max-w-[500px] w-full"} text-center px-4 py-3 text-white uppercase`} style={{fontSize: "13px"}}>
+                <Button href={`${process.env.BETTER_AUTH_URL ?? ""}${props.link ?? ""}`} className={`bg-black ${props.newPassword && "max-w-[500px] w-full"} text-center px-4 py-3 text-white uppercase`} style={{fontSize: "13px"}}>
                     Sign in
                 </Button>
                 <Text className={`m-0 pt-4 opacity-70 w-full ${props.newPassword && "max-w-[500px] text-center"}`}>Please change your password immediately after signing in.</Text>

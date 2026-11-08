@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import BanUserDialog from "@/app/dashboard/admin/users/dialogs/BanUserDialog";
 import DeleteUserDialog from "@/app/dashboard/admin/users/dialogs/DeleteUserDialog";
 import ChangePasswordDialog from "@/app/dashboard/admin/users/dialogs/ChangePasswordDialog";
+import sendNotificationClient from "@/lib/actions/notifications/sendNotificationsClient";
 
 
 // Use `accessor` for data columns and `display` for columns without one.
@@ -86,12 +87,15 @@ export function getUserColumns({banUserAuth, deleteUserAuth, user}: UserColumnsP
                         role: x,
                     });
                     if (error) {
+                        setRole(row.original.role)
                         toast.add({
                             title: "Error",
                             description: error.message,
                             type: "error"
                         })
                     } else {
+                        await sendNotificationClient({type: "USER_ROLE_CHANGED_ADMIN", user: {name: row.original.name}, newRole: x, triggerUser: {id: user.id, name: user.name}, userGroup: "admins", link: `/dashboard/admin/users/${row.original.id}`});
+                        await sendNotificationClient({type: "USER_ROLE_CHANGED_USER", newRole: x, triggerUser: {id: user.id, name: user.name}, specificUsers: [row.original], link: `/dashboard`});
                         toast.add({
                             title: "Success",
                             description: "User role updated successfully.",
@@ -125,9 +129,9 @@ export function getUserColumns({banUserAuth, deleteUserAuth, user}: UserColumnsP
             const [openDelete, setOpenDelete] = useState(false)
             const [openChangePassword, setOpenChangePassword] = useState(false)
             return <div className="flex justify-end w-full">
-                <BanUserDialog open={openBan} onOpenChange={setOpenBan} userId={row.original.id} userName={row.original.name} />
-                <DeleteUserDialog open={openDelete} onOpenChange={setOpenDelete} userId={row.original.id}/>
-                <ChangePasswordDialog open={openChangePassword} onOpenChange={setOpenChangePassword} userId={row.original.id} userName={row.original.name} />
+                <BanUserDialog open={openBan} onOpenChange={setOpenBan} userId={row.original.id} userName={row.original.name} userEmail={row.original.email} userNotifPreferences={row.original.notif_preferences} />
+                <DeleteUserDialog open={openDelete} onOpenChange={setOpenDelete} userId={row.original.id} userName={row.original.name} userEmail={row.original.email} />
+                <ChangePasswordDialog open={openChangePassword} onOpenChange={setOpenChangePassword} userId={row.original.id} userName={row.original.name} userEmail={row.original.email} userNotifPreferences={row.original.notif_preferences} />
                 <DropdownMenu>
                     <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm">
                         <MoreHorizontal />

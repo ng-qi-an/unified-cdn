@@ -6,9 +6,9 @@ import { StaticEmailIcon } from "./EmailIcon";
 export default function UserCreatedUser(props: Parameters<typeof NotificationTypes.USER_CREATED_USER>[0]) {
     return <EmailTemplate>
             <Section align="left" className="mobile:!max-w-full max-w-[490px] mb-4 pb-0">
-                <Preview>Welcome to Unified CDN!</Preview>
+                <Preview>You've been invited to join, so get started with setting up your account.</Preview>
                 <Heading as="h1" className="uppercase font-bold text-balance">
-                    Welcome to the platform.
+                    Welcome to Unified CDN
                 </Heading>
                 <Text className="m-0 pt-6">
                     Hey {props.newUser.name},
@@ -33,7 +33,7 @@ export default function UserCreatedUser(props: Parameters<typeof NotificationTyp
                     </Row>
                 </div>
                 <Section className="pt-10 pr-8 max-w-[500px]">
-                    <Button href={props.link} className="bg-black px-4 py-3 text-white uppercase w-full text-center" style={{fontSize: "13px"}}>
+                    <Button href={`${process.env.BETTER_AUTH_URL ?? ""}${props.link ?? ""}`} className="bg-black px-4 py-3 text-white uppercase w-full text-center" style={{fontSize: "13px"}}>
                         Get Started
                     </Button>
                     <Text className="m-0 pt-2 px-4 opacity-70 w-full text-center">{props.newUser.password ? "Please change your password immediately after signing in." : "Check if you have recieved your password from your admin."}</Text>

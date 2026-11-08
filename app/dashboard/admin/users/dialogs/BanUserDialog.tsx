@@ -6,12 +6,13 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
 import { makeAuditLogClient } from "@/lib/actions/logs/makeAuditLogClient";
+import sendNotificationClient from "@/lib/actions/notifications/sendNotificationsClient";
 import { authClient } from "@/lib/auth-client";
 import revalidateData from "@/lib/revalidateData";
 import { formatLocalDateTime } from "@/lib/time";
 import { useEffect, useState } from "react";
 
-export default function BanUserDialog({userId, userName, open, onOpenChange}: {userId: string, userName: string, open: boolean, onOpenChange: (open: boolean) => void}){
+export default function BanUserDialog({userId, userName, userEmail, userNotifPreferences, open, onOpenChange}: {userId: string, userName: string, userEmail: string, userNotifPreferences: any, open: boolean, onOpenChange: (open: boolean) => void}){
     const [reason, setReason] = useState("No reason provided.");
     const [hasExpiry, setHasExpiry] = useState(false);
     const [expiryDate, setExpiryDate] = useState(formatLocalDateTime(new Date()));
@@ -46,6 +47,8 @@ export default function BanUserDialog({userId, userName, open, onOpenChange}: {u
                     })
                 }
                 await makeAuditLogClient({userId: data!.user.id, code: "USER_BANNED", data: {user: {id: userId, name: userName}, reason: reason ?? "No reason provided.", expiresTimestamp: hasExpiry ? new Date(expiryDate).getTime() : undefined}});
+                await sendNotificationClient({type: "USER_BANNED_ADMIN", user: {name: userName}, reason: reason, expiresAt: hasExpiry ? new Date(expiryDate) : undefined, triggerUser: {id: data!.user.id, name: data!.user.name}, userGroup: "admins", link: `/dashboard/admin/users/${userId}`});
+                await sendNotificationClient({type: "USER_BANNED_USER", reason: reason, expiresAt: hasExpiry ? new Date(expiryDate) : undefined, triggerUser: {id: data!.user.id, name: data!.user.name}, specificUsers: [{name: userName, id: userId, email: userEmail, notif_preferences: userNotifPreferences}]});
                 toast.add({
                     title: "Success",
                     description: "The user has been banned successfully.",

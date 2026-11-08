@@ -1,5 +1,6 @@
 import { deleteFiles } from "@/lib/actions/files/deleteFiles";
 import { makeAuditLog } from "@/lib/actions/logs/makeAuditLog";
+import sendNotification from "@/lib/actions/notifications/sendNotification";
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, NotFoundError } from "@/lib/errors";
 import { errorToResponse, userHasPermissionServer, verifyUser } from "@/lib/permissions/serverPermissionHelpers";
@@ -19,6 +20,14 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
                 columns: {
                     id: true,
                     key: true
+                }
+            },
+            owner: {
+                columns: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    notif_preferences: true
                 }
             }
         }
@@ -53,6 +62,10 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
             }
         }
         await makeAuditLog({userId: user.id, code: "DATABASE_DELETED", data: {database: {id: dbData.id, name: dbData.name, provider: dbData.provider}}});
+        await sendNotification("DATABASE_DELETED_ADMIN", {userGroup: "admins", databaseName: dbData.name, ownerName: dbData.owner?.name ?? "Unknown User", triggerUser: {id: data.user.id, name: data.user.name}});
+        if (dbData.owner) {
+            await sendNotification("DATABASE_DELETED_USER", {specificUsers: [dbData.owner], databaseName: dbData.name, triggerUser: {id: data.user.id, name: data.user.name}});
+        }
         return Response.json({message: "Database deleted successfully!"}, {status: 200});
     } catch (error) {
         console.error("Error deleting database:", error);

@@ -13,6 +13,7 @@ import revalidateData from "@/lib/revalidateData";
 import { user as userSchema } from "@/lib/schema/auth-schema";
 import DeleteUserDialog from "../dialogs/DeleteUserDialog";
 import { makeAuditLogClient } from "@/lib/actions/logs/makeAuditLogClient";
+import sendNotificationClient from "@/lib/actions/notifications/sendNotificationsClient";
 
 export default function UserActions({user, currentUser}: {user: typeof userSchema.$inferSelect, currentUser: User}){
     const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
@@ -20,7 +21,7 @@ export default function UserActions({user, currentUser}: {user: typeof userSchem
     const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
     return <div className="space-y-2 mt-4">
         <Button className="w-full" size="sm" variant="outline" onClick={()=> setChangePasswordDialogOpen(true)}><Key/> Change password</Button>
-        <ChangePasswordDialog open={changePasswordDialogOpen} onOpenChange={setChangePasswordDialogOpen} userId={user.id} userName={user.name}/>
+        <ChangePasswordDialog open={changePasswordDialogOpen} onOpenChange={setChangePasswordDialogOpen} userId={user.id} userName={user.name} userEmail={user.email} userNotifPreferences={user.notif_preferences} />
         <Button className="w-full" size="sm" variant="outline" onClick={()=>{
             navigator.clipboard.writeText(user.id)
             toast.add({
@@ -41,6 +42,8 @@ export default function UserActions({user, currentUser}: {user: typeof userSchem
                 })
             }
             await makeAuditLogClient({userId: currentUser.id, code: "USER_UNBANNED", data: {user: {id: user.id, name: user.name}}});
+            await sendNotificationClient({type: "USER_UNBANNED_ADMIN", user: {name: user.name}, triggerUser: {id: currentUser.id, name: currentUser.name}, userGroup: "admins", link: `/dashboard/admin/users/${user.id}`});
+            await sendNotificationClient({type: "USER_UNBANNED_USER", triggerUser: {id: currentUser.id, name: currentUser.name}, specificUsers: [user], link: `/auth/sign-in`});
             toast.add({
                 title: "Success",
                 description: "The user has been unbanned successfully.",
@@ -52,10 +55,10 @@ export default function UserActions({user, currentUser}: {user: typeof userSchem
         </Button>
         : <>
             <Button disabled={user.id === currentUser.id} className="w-full" size="sm" variant="destructive" onClick={()=> setBanUserDialogOpen(true)}><Ban/> Ban</Button>
-            <BanUserDialog open={banUserDialogOpen} onOpenChange={setBanUserDialogOpen} userId={user.id} userName={user.name} />
+            <BanUserDialog open={banUserDialogOpen} onOpenChange={setBanUserDialogOpen} userId={user.id} userName={user.name} userEmail={user.email} userNotifPreferences={user.notif_preferences} />
         </>}
         <Button disabled={user.id === currentUser.id} className="w-full" size="sm" variant="destructive" onClick={()=> setDeleteUserDialogOpen(true)}><Trash/> Delete</Button>
-        <DeleteUserDialog open={deleteUserDialogOpen} onOpenChange={setDeleteUserDialogOpen} userId={user.id}/>
+        <DeleteUserDialog open={deleteUserDialogOpen} onOpenChange={setDeleteUserDialogOpen} userId={user.id} userName={user.name} userEmail={user.email} />
         
     </div>
 }

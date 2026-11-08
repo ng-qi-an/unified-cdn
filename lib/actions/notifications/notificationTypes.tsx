@@ -19,6 +19,8 @@ import UserUnbannedUser from "./email/templates/UserUnbannedUser"
 import UserUnbannedAdmin from "./email/templates/UserUnbannedAdmin"
 import UserDeletedAdmin from "./email/templates/UserDeletedAdmin"
 import UserDeletedUser from "./email/templates/UserDeletedUser"
+import UserRoleChangedAdmin from "./email/templates/UserRoleChangedAdmin"
+import UserRoleChangedUser from "./email/templates/UserRoleChangedUser"
 
 export type NotificationConfigurationType = {
     title: string,
@@ -69,13 +71,11 @@ export const NotificationTypes = {
     "APPLICATION_DELETED_USER": (props: {appName: string} & DefaultNotificationParameters): NotificationConfigurationType => ({
         title: `Application deleted`,
         description: `${props.triggerUser.name} deleted your application ${props.appName}.`,
-        link: props.link,
         emailTemplate: <ApplicationDeletedUser {...props}/>
     }),
     "APPLICATION_DELETED_ADMIN": (props: {appName: string, ownerName: string} & DefaultNotificationParameters): NotificationConfigurationType => ({
         title: `Application deleted`,
         description: `${props.triggerUser.name} deleted the application ${props.appName} by ${props.ownerName}.`,
-        link: props.link,
         emailTemplate: <ApplicationDeletedAdmin {...props}/>
     }),
     "DATABASE_CREATED": (props: {databaseName: string} & DefaultNotificationParameters): NotificationConfigurationType => ({
@@ -97,14 +97,14 @@ export const NotificationTypes = {
         emailTemplate: <DatabaseDeletedUser {...props}/>
     }),
     "USER_CREATED_USER": (props: {newUser: {email: string, name: string, password?: string}} & DefaultNotificationParameters): NotificationConfigurationType => ({
-        title: `User created`,
+        title: `Welcome to Unified CDN`,
         description: `${props.triggerUser.name} created your user account.`,
         link: props.link,
         emailTemplate: <UserCreatedUser {...props}/>
     }),
     "USER_CREATED_ADMIN": (props: {newUser: {name: string, role: string}} & DefaultNotificationParameters): NotificationConfigurationType => ({
         title: `User created`,
-        description: `${props.triggerUser.name} created a new user "${props.newUser.name} with the role ${props.newUser.role}`,
+        description: `${props.triggerUser.name} created a new user "${props.newUser.name}" with the role ${props.newUser.role}`,
         link: props.link,
         emailTemplate: <UserCreatedAdmin {...props}/>
     }),
@@ -120,15 +120,27 @@ export const NotificationTypes = {
         description: `${props.triggerUser.name} changed the password for user ${props.user.name}.`,
         emailTemplate: <UserPasswordChangedAdmin {...props}/>
     }),
-    "USER_BANNED_USER": (props: {reason: string, expiresAt: Date} & DefaultNotificationParameters): NotificationConfigurationType => ({
+    "USER_ROLE_CHANGED_USER": (props: {newRole: string} & DefaultNotificationParameters): NotificationConfigurationType => ({
+        title: `Your role was changed`,
+        description: `${props.triggerUser.name} changed your role to ${props.newRole}.`,
+        link: props.link,
+        emailTemplate: <UserRoleChangedUser {...props}/>
+    }),
+    "USER_ROLE_CHANGED_ADMIN": (props: {user: {name: string}, newRole: string} & DefaultNotificationParameters): NotificationConfigurationType => ({
+        title: `User role changed`,
+        description: `${props.triggerUser.name} changed the role of ${props.user.name} to ${props.newRole}.`,
+        link: props.link,
+        emailTemplate: <UserRoleChangedAdmin {...props}/>
+    }),
+    "USER_BANNED_USER": (props: {reason: string, expiresAt: Date | undefined} & DefaultNotificationParameters): NotificationConfigurationType => ({
         title: `User banned`,
-        description: `${props.triggerUser.name} banned your account. Reason: ${props.reason}. Your ban will expire on ${props.expiresAt.toLocaleString(undefined, {dateStyle: "long", timeStyle: "short"})}.`,
+        description: `${props.triggerUser.name} banned your account. Reason: ${props.reason}. Your ban will expire on ${props.expiresAt?.toLocaleString(undefined, {dateStyle: "long", timeStyle: "short"}) ?? "never"}.`,
         link: props.link,
         emailTemplate: <UserBannedUser {...props}/>
     }),
-    "USER_BANNED_ADMIN": (props: {user: {name: string}, reason: string, expiresAt: Date} & DefaultNotificationParameters): NotificationConfigurationType => ({
+    "USER_BANNED_ADMIN": (props: {user: {name: string}, reason: string, expiresAt: Date | undefined} & DefaultNotificationParameters): NotificationConfigurationType => ({
         title: `User banned`,
-        description: `${props.triggerUser.name} banned user ${props.user.name}. Reason: ${props.reason}. Their ban will expire on ${props.expiresAt.toLocaleString(undefined, {dateStyle: "long", timeStyle: "short"})}.`,
+        description: `${props.triggerUser.name} banned user ${props.user.name}. Reason: ${props.reason}. Their ban will expire on ${props.expiresAt?.toLocaleString(undefined, {dateStyle: "long", timeStyle: "short"}) ?? "never"}.`,
         link: props.link,
         emailTemplate: <UserBannedAdmin {...props}/>
     }),

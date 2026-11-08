@@ -98,6 +98,17 @@ const sampleData: Record<NotificationType, SampleData> = {
         triggerUser: { id: "user-123", name: "Alex Morgan" },
         user: { name: "Jamie Lee" },
     },
+    USER_ROLE_CHANGED_USER: {
+        link: "/dashboard",
+        triggerUser: { id: "user-123", name: "Alex Morgan" },
+        newRole: "admin",
+    },
+    USER_ROLE_CHANGED_ADMIN: {
+        link: "/dashboard/admin/users/example",
+        triggerUser: { id: "user-123", name: "Alex Morgan" },
+        user: { name: "Jamie Lee" },
+        newRole: "admin",
+    },
     USER_BANNED_USER: {
         link: "/dashboard",
         triggerUser: { id: "user-123", name: "Alex Morgan" },

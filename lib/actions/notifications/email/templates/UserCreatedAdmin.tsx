@@ -8,7 +8,7 @@ export default function UserCreatedAdmin(props: Parameters<typeof NotificationTy
     return <EmailTemplate>
             <EmailSectionHero icon={User} title="A new user was created." subtitle={<>{props.triggerUser.name} created a new user with the name <strong>"{props.newUser.name}"</strong> and role of "{props.newUser.role}".</>} />
             <Section className="pt-4">
-                <Button href={props.link} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
+                <Button href={`${process.env.BETTER_AUTH_URL ?? ""}${props.link ?? ""}`} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
                     View User
                 </Button>
             </Section>

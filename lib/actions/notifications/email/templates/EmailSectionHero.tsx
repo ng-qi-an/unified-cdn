@@ -16,4 +16,4 @@ export default function EmailSectionHero({title, icon, subtitle}: {title: string
             {subtitle}
         </Text>
     </Section>
-}
+} 

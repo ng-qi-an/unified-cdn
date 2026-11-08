@@ -1,4 +1,5 @@
 import { makeAuditLog } from "@/lib/actions/logs/makeAuditLog";
+import sendNotification from "@/lib/actions/notifications/sendNotification";
 import { db } from "@/lib/db";
 import { userHasPermissionServer, verifyUserWithPermission } from "@/lib/permissions/serverPermissionHelpers";
 import { HCDNAuthenticationError } from "@/lib/providers/hcdn/errors";
@@ -96,5 +97,6 @@ export const POST = verifyUserWithPermission(async(user)=>{
         console.error(error);
         return Response.json({ error: "INTERNAL", message: "Unexpected error occurred while creating database."}, {status: 500});
     }
+    await sendNotification("DATABASE_CREATED", {userGroup: "admins", databaseName: payload.name, triggerUser: {id: data.user.id, name: data.user.name}, link: `/dashboard/admin/databases/${payload.id}`});
     return Response.json({ message: "Database created successfully", id: payload.id }, { status: 200 });
 })

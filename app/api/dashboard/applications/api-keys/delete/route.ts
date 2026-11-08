@@ -1,4 +1,5 @@
 import { makeAppLog } from "@/lib/actions/logs/appLog";
+import sendNotification from "@/lib/actions/notifications/sendNotification";
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, NotFoundError } from "@/lib/errors";
 import { errorToResponse, userHasPermissionServer, verifyUser } from "@/lib/permissions/serverPermissionHelpers";
@@ -21,5 +22,23 @@ export const DELETE = verifyUser(async(req, ctx, user) => {
     }
     await db.delete(apikey).where(eq(apikey.id, keyId));
     await makeAppLog({appId: appId, code: "APIKEY_DELETED", userId: user.id, data: {apiKeyId: keyData.id, apiKeyName: keyData.name}})
+    const appData = await db.query.applications.findFirst({
+        where: {
+            id: appId
+        },
+        with: {
+            owner: {
+                columns: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    notif_preferences: true
+                }
+            }
+        }
+    })
+    if (appData && appData.owner) {
+        await sendNotification("APIKEY_DELETED_USER", {specificUsers: [appData.owner], appName: appData.name, apiKeyName: keyData.name ?? "Unknown Key", triggerUser: {id: user.id, name: user.name}, link: `/dashboard/applications/${appData.id}`});
+    }
     return Response.json({ message: "API key deleted successfully" }, { status: 200 });
 })

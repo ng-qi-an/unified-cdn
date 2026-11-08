@@ -8,7 +8,7 @@ export default function UserUnbannedUser(props: Parameters<typeof NotificationTy
     return <EmailTemplate>
             <EmailSectionHero icon={Gavel} title="Your account has been unbanned." subtitle={<>{props.triggerUser.name} has unbanned your account. You can now sign back into Unified CDN.</>} />
             <Section className="pt-4">
-                <Button href={props.link} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
+                <Button href={`${process.env.BETTER_AUTH_URL ?? ""}${props.link ?? ""}`} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
                     Sign in
                 </Button>
             </Section>

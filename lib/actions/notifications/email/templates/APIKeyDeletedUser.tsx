@@ -8,7 +8,7 @@ export default function APIKeyDeletedUser(props: Parameters<typeof NotificationT
     return <EmailTemplate>
             <EmailSectionHero icon={Key} title="Your API key was deleted." subtitle={<>{props.triggerUser.name} deleted your API key <strong>"{props.apiKeyName}"</strong> from your application "<strong>{props.appName}</strong>". If you think this was a mistake, contact your administrator for more information.</>} />
             <Section className="pt-4">
-                <Button href={props.link} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
+                <Button href={`${process.env.BETTER_AUTH_URL ?? ""}${props.link ?? ""}`} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
                     View API Keys
                 </Button>
             </Section>

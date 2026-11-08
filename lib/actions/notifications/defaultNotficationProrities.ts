@@ -16,6 +16,8 @@ export const defaultNotificationPriorities: { [Type in NotificationType]: Notifi
     "USER_CREATED_ADMIN": "low",
     "USER_PASSWORD_CHANGED_USER": "high",
     "USER_PASSWORD_CHANGED_ADMIN": "low",
+    "USER_ROLE_CHANGED_USER": "high",
+    "USER_ROLE_CHANGED_ADMIN": "low",
     "USER_BANNED_USER": "high",
     "USER_BANNED_ADMIN": "medium",
     "USER_UNBANNED_USER": "high",

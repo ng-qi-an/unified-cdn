@@ -8,7 +8,7 @@ export default function ApplicationRequested(props: Parameters<typeof Notificati
     return <EmailTemplate>
             <EmailSectionHero icon={Gavel} title="A new application was requested." subtitle={<>{props.triggerUser.name} requested an application with the name <strong>"{props.appName}"</strong> on database "<strong>{props.databaseName}</strong>". You can review the application details by clicking the button below.</>} />
             <Section className="pt-4">
-                <Button href={props.link} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
+                <Button href={`${process.env.BETTER_AUTH_URL ?? ""}${props.link ?? ""}`} className="bg-black px-4 py-3 text-white uppercase" style={{fontSize: "13px"}}>
                     View Application
                 </Button>
             </Section>
