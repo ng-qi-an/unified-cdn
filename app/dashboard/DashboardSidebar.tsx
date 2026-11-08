@@ -77,7 +77,7 @@ export default async function DashboardSidebar() {
             <SidebarMenu>
                 <SidebarMenuItem>
                     <Suspense fallback={<div className="p-2">Loading...</div>}>
-                        <UserDropdown/>
+                        <UserDropdown user={data.user}/>
                     </Suspense>
                 </SidebarMenuItem>
             </SidebarMenu>

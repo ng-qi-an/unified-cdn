@@ -7,6 +7,7 @@ import { runAfterResponse } from "@/lib/runAfterResponse";
 import { user as userSchema } from "@/lib/schema/auth-schema";
 import { eq, isNotNull, not, or } from "drizzle-orm";
 import { defaultNotificationPriorities } from "./defaultNotficationProrities";
+import { NotificationPreferencesType } from "@/lib/notificationPreferences";
 export type SendNotificationArgs<T extends NotificationType = NotificationType> = {
     specificUsers?: Pick<typeof userSchema.$inferSelect, "id" | "name" | "email" | "notif_preferences">[],
     userGroup?: "all" | "admins" | "non-admins" | "superAdmins",
@@ -47,15 +48,9 @@ export default async function sendNotification<T extends NotificationType>(type:
             }))
             await db.insert(notifications).values(payload);
         }
-        type NotifPreferences = {
-            [key: string]:  {
-                enabled: boolean,
-                priority: NotificationPriorities[],
-            }
-        } | undefined
         const notificationPriority = defaultNotificationPriorities[type]
 
-        const usersWithEmailEnabled = users.filter((user)=> (user.notif_preferences as NotifPreferences)?.email?.enabled == true && (user.notif_preferences as NotifPreferences)?.email?.priority?.includes(notificationPriority));
+        const usersWithEmailEnabled = users.filter((user)=> (user.notif_preferences as NotificationPreferencesType)?.email?.enabled == true && (user.notif_preferences as NotificationPreferencesType)?.email?.priority?.includes(notificationPriority));
         // Send emails in bulk first
         try {
             if (config.emailTemplate){
