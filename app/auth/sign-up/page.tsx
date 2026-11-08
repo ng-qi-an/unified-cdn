@@ -28,6 +28,12 @@ export default function SignInPage() {
         name,
         email,
         password,
+        notif_preferences: {
+          email: {
+            enabled: true,
+            priority: ["high", "medium"],
+          },
+        },
       })
       if (error) {
         toast.add({

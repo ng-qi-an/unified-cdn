@@ -1,21 +1,14 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import UserPageClient from "./client";
 import { db } from "@/lib/db";
-import { session } from "@/lib/schema/auth-schema";
+import { normaliseNotificationPreferences } from "@/lib/notificationPreferences";
+import { session, user } from "@/lib/schema/auth-schema";
 import { desc, eq } from "drizzle-orm";
-import { Metadata } from "next";
 
 export const instant = false;
 
 export default async function UserPage({params}: {params: Promise<{id: string}>}) {
     const { id } = await params;
-    const data = await auth.api.getUser({
-        query: {
-            id,
-        },
-        headers: await headers(),
-    });
+    const [userRecord] = await db.select().from(user).where(eq(user.id, id));
     const sessions = await db.select().from(session).where(eq(session.userId, id)).orderBy(desc(session.createdAt))
-    return <UserPageClient user={data} sessions={sessions}/>
+    return <UserPageClient user={{...userRecord, notif_preferences: normaliseNotificationPreferences(userRecord.notif_preferences)}} sessions={sessions}/>;
 }
