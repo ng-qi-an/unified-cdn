@@ -1,7 +1,9 @@
+import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 import { redirect } from "next/navigation";
 
-export default function SignupLayout({children}: {children: React.ReactNode}){
-    if (process.env.NEXT_PUBLIC_SIGNUP_ENABLED !== "true") {
+export default async function SignupLayout({children}: {children: React.ReactNode}){
+    const siteConfig = await getSiteConfig();
+    if (siteConfig.auth.allowSignups === false){
         return redirect("/auth/sign-in");
     } else {
         return children

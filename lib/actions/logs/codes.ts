@@ -30,6 +30,7 @@ export const auditLogCodes = [
     "USER_PASSWORD_CHANGED",
     "USER_UNBANNED",
     "USER_BANNED",
-    "USER_DELETED"
+    "USER_DELETED",
+    "SITE_CONFIG_EDITED"
 ] as const
 export type AuditLogCode  = (typeof auditLogCodes)[number]

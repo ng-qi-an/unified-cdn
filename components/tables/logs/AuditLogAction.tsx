@@ -1,9 +1,10 @@
 'use client';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AuditLog, DbLog } from "@/lib/schema/schemaTypes";
+import { AuditLog } from "@/lib/schema/schemaTypes";
 import { availableServices } from "@/lib/services";
-import { AppWindowMac, Ban, CircleQuestionMark, Database, DatabaseCog, DatabasePlus, DatabaseX, FilePen, FilePlusCorner, FileXCorner, KeyIcon, Pen, Trash, UserKey, UserPen, UserPlus, UserX } from "lucide-react";
+import { AppWindowMac, Ban, CircleQuestionMark, Database, DatabaseCog, DatabasePlus, DatabaseX, Server, UserKey, UserPen, UserPlus, UserX } from "lucide-react";
 import Link from "next/link";
+import { Fragment } from "react/jsx-runtime";
 
 export default function AuditLogAction({log}: {log: AuditLog}){
     let Icon;
@@ -82,6 +83,11 @@ export default function AuditLogAction({log}: {log: AuditLog}){
             header = `User deleted`
             status = "destructive"
             text = <>{log.data.user.name} was permanently deleted.</>
+            break;
+        case "SITE_CONFIG_EDITED":
+            Icon = Server
+            header =  `Site configuration updated`
+            text = <>The key{log.data.updatedKeys.length > 1 ? "s" : ""} {log.data.updatedKeys.map((key: string, index: number)=> <Fragment key={index}><code>{key}</code> {index < log.data.updatedKeys.length - 1 ? ", " : ""}</Fragment>)} {log.data.updatedKeys.length > 1 ? "were" : "was"} updated.</>
             break;
         default:
             Icon = CircleQuestionMark

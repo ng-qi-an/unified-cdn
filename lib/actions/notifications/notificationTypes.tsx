@@ -21,6 +21,7 @@ import UserDeletedAdmin from "./email/templates/UserDeletedAdmin"
 import UserDeletedUser from "./email/templates/UserDeletedUser"
 import UserRoleChangedAdmin from "./email/templates/UserRoleChangedAdmin"
 import UserRoleChangedUser from "./email/templates/UserRoleChangedUser"
+import SiteConfigUpdated from "./email/templates/SiteConfigUpdated"
 
 export type NotificationConfigurationType = {
     title: string,
@@ -167,6 +168,12 @@ export const NotificationTypes = {
         description: `${props.triggerUser.name} deleted your account. If this was a mistake, contact your administrator immediately.`,
         link: props.link,
         emailTemplate: <UserDeletedUser {...props}/>
+    }),
+    "SITE_CONFIG_UPDATED": (props: {updatedKeys: string[]} & DefaultNotificationParameters): NotificationConfigurationType => ({
+        title: `Site configuration updated`,
+        description: `${props.triggerUser.name} updated ${props.updatedKeys.join(", ")}.`,
+        link: props.link,
+        emailTemplate: <SiteConfigUpdated {...props}/>
     }),
 }
 

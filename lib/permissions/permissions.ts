@@ -6,6 +6,7 @@ export const permissionStatement = {
     ...defaultStatements,
     applications: ["request", "create", "update", "delete", "viewAll", "reviewRequests"], 
     databases: ["create", "update", "delete", "viewAll", "share"],
+    siteConfig: ["update"],
 } as const; 
 
 export const ac = createAccessControl(permissionStatement); 
@@ -22,14 +23,12 @@ export const userRole = ac.newRole({
 export const adminRole = ac.newRole({
     ...adminAc.statements,
     applications: [...userRole.statements.applications, "create", "viewAll", "reviewRequests"],
-    databases: ["create", "update", "delete"]
+    databases: ["create", "update", "delete"],
+    siteConfig: ["update"]
 })
 
 export const superAdminRole = ac.newRole({
-    ...adminAc.statements,
-    user: [...adminAc.statements.user, "impersonate-admins"],
-    applications: [...permissionStatement.applications],
-    databases: [...permissionStatement.databases]
+    ...permissionStatement
 })
 
 

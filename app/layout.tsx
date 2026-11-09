@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toast";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import SiteConfigProvider from "@/components/providers/site-config-provider";
+import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -27,7 +29,8 @@ export const metadata: Metadata = {
   description: 'An open-source file storage solution, unifying CDNs.',
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const siteConfig = await getSiteConfig();
   return (
     <html
       lang="en"
@@ -42,7 +45,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           disableTransitionOnChange
         >
           <TooltipProvider>
-            {children}
+            <SiteConfigProvider initialSiteConfig={siteConfig}>
+              {children}
+            </SiteConfigProvider>
           </TooltipProvider>
         </ThemeProvider>
         <Toaster/>

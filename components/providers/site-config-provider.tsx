@@ -9,17 +9,9 @@ const placeholderSiteConfig: GetSiteConfigReturnType = { ...defaultSiteConfig, r
 const SiteConfigContext = createContext<GetSiteConfigReturnType>(placeholderSiteConfig);
 export const useSiteConfig = () => useContext(SiteConfigContext);
 
-export default function SiteConfigProvider({children}: {children: React.ReactNode}){
-    const [siteConfig, setSiteConfig] = useState<GetSiteConfigReturnType>(placeholderSiteConfig);
-    const [loaded, setLoaded] = useState(false);
-    useEffect(()=>{
-        (async()=>{
-            const siteConfig = await getSiteConfigClient();
-            setSiteConfig(siteConfig);
-            setLoaded(true);
-        })();
-    }, [])
-    return <SiteConfigContext.Provider value={siteConfig}>
-        {loaded && children}
+
+export default function SiteConfigProvider({children, initialSiteConfig}: {children: React.ReactNode; initialSiteConfig: GetSiteConfigReturnType}){
+    return <SiteConfigContext.Provider value={initialSiteConfig}>
+        {children}
     </SiteConfigContext.Provider>
 }

@@ -24,4 +24,5 @@ export const defaultNotificationPriorities: { [Type in NotificationType]: Notifi
     "USER_UNBANNED_ADMIN": "medium",
     "USER_DELETED_USER": "high",
     "USER_DELETED_ADMIN": "medium",
+    "SITE_CONFIG_UPDATED": "medium",
 }

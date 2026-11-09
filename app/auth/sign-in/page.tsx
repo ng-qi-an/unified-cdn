@@ -2,20 +2,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { authClient } from "@/lib/auth-client";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
+import { useSiteConfig } from "@/components/providers/site-config-provider";
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+  const siteConfig = useSiteConfig();
   async function submitForm() {
     setSubmitting(true);
     try {
@@ -73,7 +74,7 @@ export default function SignInPage() {
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? <Spinner/> : "Sign In"}
             </Button>
-            {process.env.NEXT_PUBLIC_ENABLE_SIGNUP == "true" && <Link href="/auth/sign-up" className="w-full">
+            {siteConfig.auth.allowSignups && <Link href="/auth/sign-up" className="w-full">
               <Button disabled={submitting} type="button" size="xs" variant="link" className="w-full text-xs mt-0 text-muted-foreground hover:text-foreground">
                 Sign Up
               </Button>

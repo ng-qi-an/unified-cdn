@@ -5,6 +5,8 @@ import { admin } from "better-auth/plugins"
 import * as schema from "./schema/auth-schema";
 import { ac, adminRole, superAdminRole, userRole, viewOnlyRole } from "./permissions/permissions";
 import { apiKey } from "@better-auth/api-key";
+import { APIError, createAuthMiddleware } from "better-auth/api";
+import getSiteConfig from "./actions/site-settings/getSiteConfig";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -15,8 +17,20 @@ export const auth = betterAuth({
     emailAndPassword: { 
         enabled: true, 
         revokeSessionsOnPasswordReset: true, 
-        disableSignUp: process.env.NEXT_PUBLIC_ALLOW_SIGNUP == "false" ? true : false,
-    }, 
+    },
+    hooks: {
+        before: createAuthMiddleware(async(ctx)=>{
+            if (ctx.path.startsWith("/sign-up")){
+                const siteConfig = await getSiteConfig();
+                if (siteConfig.auth.allowSignups === false){
+                    throw new APIError("BAD_REQUEST", {
+                        code: "SIGNUPS_DISABLED",
+                        message: "Signups are not allowed. Contact an administrator to create your account."
+                    })
+                }
+            }
+        })
+    },
     user: {
         additionalFields: {
             notif_preferences: {
