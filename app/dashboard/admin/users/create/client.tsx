@@ -4,6 +4,7 @@ import Dashboard from "@/components/navigation/Dashboard";
 import DashboardBody from "@/components/navigation/DashboardBody";
 import DashboardHeader from "@/components/navigation/DashboardHeader";
 import DashboardSectionHeader from "@/components/navigation/DashboardSectionHeader";
+import { useSiteConfig } from "@/components/providers/site-config-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,7 +16,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { makeAuditLogClient } from "@/lib/actions/logs/makeAuditLogClient";
 import sendNotificationClient from "@/lib/actions/notifications/sendNotificationsClient";
+import { defaultSiteConfig } from "@/lib/actions/site-settings/siteConfigType";
 import { authClient } from "@/lib/auth-client";
+import { roles } from "@/lib/permissions/permissions";
 import { generateId } from "better-auth";
 import { Copy, RefreshCcw } from "lucide-react";
 import Link from "next/link";
@@ -23,37 +26,16 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function ClientUsersPage({fetchedUsers}: {fetchedUsers: {email: string}[]}){
+    const siteConfig = useSiteConfig();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [sendPassword, setSendPassword] = useState(true);
-    const [role, setRole] = useState<string>("user");
+    const [role, setRole] = useState<string>(siteConfig.auth.defaultUserRole);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
     const { data } =  authClient.useSession();
-
-    const roles = [
-        {
-            label: "View only",
-            value: "viewOnly",
-            description: "Can view applications assigned to them, but cannot create any resources."
-        },
-        {
-            label: "User",
-            value: "user",
-            description: "Can request applications and use them, but cannot create databases."
-        },
-        {
-            label: "Admin",
-            value: "admin",
-            description: "Can create applications, databases and manage users."
-        },
-        {
-            label: "Super Admin",
-            value: "superAdmin",
-            description: "Can create applications, databases and manage all users."
-        }
-    ]
+    
     return <Dashboard>
         <DashboardHeader breadcrumbs={[{name: "Users", href: "/dashboard/admin/users"}, {name: "Create user"}]}/>
         <DashboardBody>

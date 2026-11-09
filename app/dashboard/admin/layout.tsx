@@ -6,8 +6,8 @@ export const instant = false;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const session = await auth.api.getSession({
-        headers: await headers()
-    })
+            headers: await headers()
+        })
     if (!session || !session.user) {
         return "You are not logged in. Please log in to access the admin dashboard.";
     }

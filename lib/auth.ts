@@ -11,7 +11,7 @@ export const auth = betterAuth({
         provider: "pg",
         schema,
     }),
-    trustedOrigins: process.env.NEXT_PUBLIC_TRUSTED_ORIGINS?.split(",") || [],
+    trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || [],
     emailAndPassword: { 
         enabled: true, 
         revokeSessionsOnPasswordReset: true, 

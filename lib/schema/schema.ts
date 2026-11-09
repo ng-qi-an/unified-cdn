@@ -3,6 +3,7 @@ import { apikey, user } from "./auth-schema";
 import type { AppLogCode, AuditLogCode, DbLogCode } from "../actions/logs/codes";
 import { AnalyticsEventType } from "../actions/analytics/eventTypes";
 import { NotificationType } from "../actions/notifications/notificationTypes";
+import { SiteConfigType } from "../actions/site-settings/siteConfigType";
 
 export const databases = pgTable("databases", {
     id: text("id").primaryKey(),
@@ -104,5 +105,11 @@ export const notifications = pgTable("notifications", {
     link: text("link"),
     read: boolean("read").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const siteConfig = pgTable("site_config", {
+    id: text("id").primaryKey().default("default"),
+    value: jsonb("value").$type<SiteConfigType>().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })

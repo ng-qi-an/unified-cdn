@@ -1,0 +1,25 @@
+'use client';
+import { GetSiteConfigReturnType } from "@/lib/actions/site-settings/getSiteConfig";
+import getSiteConfigClient from "@/lib/actions/site-settings/getSiteConfigClient";
+import { defaultSiteConfig } from "@/lib/actions/site-settings/siteConfigType";
+import { createContext, useContext, useEffect, useState } from "react";
+
+const placeholderSiteConfig: GetSiteConfigReturnType = { ...defaultSiteConfig, raw: null };
+
+const SiteConfigContext = createContext<GetSiteConfigReturnType>(placeholderSiteConfig);
+export const useSiteConfig = () => useContext(SiteConfigContext);
+
+export default function SiteConfigProvider({children}: {children: React.ReactNode}){
+    const [siteConfig, setSiteConfig] = useState<GetSiteConfigReturnType>(placeholderSiteConfig);
+    const [loaded, setLoaded] = useState(false);
+    useEffect(()=>{
+        (async()=>{
+            const siteConfig = await getSiteConfigClient();
+            setSiteConfig(siteConfig);
+            setLoaded(true);
+        })();
+    }, [])
+    return <SiteConfigContext.Provider value={siteConfig}>
+        {loaded && children}
+    </SiteConfigContext.Provider>
+}
