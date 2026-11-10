@@ -33,6 +33,10 @@ export const auth = betterAuth({
         })
     },
     user: {
+        changeEmail: {
+            enabled: true,
+            updateEmailWithoutVerification: true
+        },
         additionalFields: {
             notif_preferences: {
                 type: "json",
@@ -77,17 +81,17 @@ export const auth = betterAuth({
                 before: async(session, ctx) => {
                     console.log("Session created, fetching location data for IP:", session.ipAddress)
                     try {
-                        const response = await fetch(`https://ip.hackclub.com/ip/${session.ipAddress}`)
+                        const response = await fetch(`http://ip-api.com/json/${session.ipAddress}`)
                         if (response.ok){
                             const data = await response.json()
                             return {
                                 data: {
                                     ...session,
-                                    countryCode: data.country_iso_code,
-                                    countryName: data.country_name,
-                                    cityName: data.city_name,
-                                    latitude: data.latitude,
-                                    longitude: data.longitude,
+                                    countryCode: data.countryCode,
+                                    countryName: data.country,
+                                    cityName: data.city,
+                                    latitude: data.lat,
+                                    longitude: data.lon,
                                 },
                             }
                         } else {
