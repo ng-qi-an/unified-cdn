@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { userHasPermissionServer } from "@/lib/permissions/serverPermissionHelpers";
 import { user } from "@/lib/schema/auth-schema";
-import { normaliseNotificationPreferences } from "@/lib/notificationPreferences";
+import { normaliseNotificationPreferences } from "@/lib/actions/notifications/notificationPreferences";
 import { desc } from "drizzle-orm";
 import UsersClientPage from "./client";
 

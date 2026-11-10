@@ -7,6 +7,7 @@ import { ac, adminRole, superAdminRole, userRole, viewOnlyRole } from "./permiss
 import { apiKey } from "@better-auth/api-key";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import getSiteConfig from "./actions/site-settings/getSiteConfig";
+import { defaultNotificationPreferences } from "./actions/notifications/notificationPreferences";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -37,12 +38,7 @@ export const auth = betterAuth({
                 type: "json",
                 required: true,
                 input: true,
-                defaultValue: {
-                    email: {
-                        enabled: true,
-                        priority: ["high", "medium"],
-                    }
-                }
+                defaultValue: defaultNotificationPreferences
             }
         }
     },

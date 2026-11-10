@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { siteConfig } from "@/lib/schema/schema";
 import { eq } from "drizzle-orm";
+import { merge } from "lodash";
 import { unstable_cache } from "next/cache";
 import { defaultSiteConfig, SiteConfigType } from "./siteConfigType";
 
@@ -18,5 +19,5 @@ export type GetSiteConfigReturnType = SiteConfigType & {raw: SiteConfigType | nu
 
 export default async function getSiteConfig(): Promise<GetSiteConfigReturnType> {
     const siteConfig = await getCachedSiteConfig();
-    return { ...defaultSiteConfig, ...siteConfig, raw: siteConfig };
+    return {...merge({}, defaultSiteConfig, siteConfig ?? {}), raw: siteConfig};
 }

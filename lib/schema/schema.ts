@@ -108,6 +108,11 @@ export const notifications = pgTable("notifications", {
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
 
+export const telegramLinkCodes = pgTable("telegram_link_codes", {
+    code: text("code").primaryKey(),
+    userId: text("user_id").unique().notNull().references(() => user.id, { onDelete: "cascade" }),
+})
+
 export const siteConfig = pgTable("site_config", {
     id: text("id").primaryKey().default("default"),
     value: jsonb("value").$type<SiteConfigType>().notNull(),

@@ -1,4 +1,4 @@
-import { NotificationPriorities, NotificationType, NotificationTypes } from "./notificationTypes";
+import { NotificationType, NotificationTypes } from "./notificationTypes";
 import { notifications } from "@/lib/schema/schema";
 import { generateId } from "better-auth";
 import { db } from "@/lib/db";
@@ -6,8 +6,10 @@ import sendEmail from "./email/sendEmail";
 import { runAfterResponse } from "@/lib/runAfterResponse";
 import { user as userSchema } from "@/lib/schema/auth-schema";
 import { eq, isNotNull, not, or } from "drizzle-orm";
-import { defaultNotificationPriorities } from "./defaultNotficationProrities";
-import { NotificationPreferencesType } from "@/lib/notificationPreferences";
+import { NotificationPreferencesType } from "@/lib/actions/notifications/notificationPreferences";
+import getSiteConfig from "../site-settings/getSiteConfig";
+import { escapeTelegramMarkdownV2 } from "./telegram/telegramMarkdown";
+
 export type SendNotificationArgs<T extends NotificationType = NotificationType> = {
     specificUsers?: Pick<typeof userSchema.$inferSelect, "id" | "name" | "email" | "notif_preferences">[],
     userGroup?: "all" | "admins" | "non-admins" | "superAdmins",
@@ -48,7 +50,8 @@ export default async function sendNotification<T extends NotificationType>(type:
             }))
             await db.insert(notifications).values(payload);
         }
-        const notificationPriority = defaultNotificationPriorities[type]
+        const siteConfig = await getSiteConfig();
+        const notificationPriority = siteConfig.notifications.priorities[type]
 
         const usersWithEmailEnabled = users.filter((user)=> (user.notif_preferences as NotificationPreferencesType)?.email?.enabled == true && (user.notif_preferences as NotificationPreferencesType)?.email?.priority?.includes(notificationPriority));
         // Send emails in bulk first
@@ -68,7 +71,34 @@ export default async function sendNotification<T extends NotificationType>(type:
         // Send the other methods individually
         const response = await Promise.all(users.map(async(user)=>{
             try {
-                const notifPreferences = user.notif_preferences || {};
+                const notifPreferences = user.notif_preferences as NotificationPreferencesType || {};
+                if (notifPreferences.telegram?.enabled && notifPreferences.telegram?.chatId && notifPreferences.telegram?.priority?.includes(notificationPriority) && siteConfig.notifications.methods.telegram?.linked){
+                    try {
+                        const telegramResponse = await fetch(`https://api.telegram.org/bot${siteConfig.notifications.methods.telegram?.telegramBotToken}/sendMessage`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                chat_id: notifPreferences.telegram.chatId,
+                                parse_mode: "MarkdownV2",
+                                text: `*🔔 ${escapeTelegramMarkdownV2(config.title)}*\n>${escapeTelegramMarkdownV2(config.description)}`,
+                                ...(config.link ? {reply_markup: {
+                                    inline_keyboard: [[{
+                                        text: "View",
+                                        url: "https://unified-cdn-tunnel.ngqian.com" + config.link
+                                    }]]
+                                }} : {})
+                            })
+                        })
+                        if (!telegramResponse.ok){
+                            const errorData = await telegramResponse.json();
+                            console.error("Error sending notification to user:", user.id, "Error:", errorData);
+                        }
+                    } catch (error) {
+                        console.error("Error sending notification to user:", user.id, error);
+                    }
+                }
             } catch (error) {
                 console.error("Error sending notification to user:", user.id, error);
             }

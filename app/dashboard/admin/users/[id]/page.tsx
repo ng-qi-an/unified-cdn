@@ -1,6 +1,6 @@
 import UserPageClient from "./client";
 import { db } from "@/lib/db";
-import { normaliseNotificationPreferences } from "@/lib/notificationPreferences";
+import { normaliseNotificationPreferences } from "@/lib/actions/notifications/notificationPreferences";
 import { session, user } from "@/lib/schema/auth-schema";
 import { desc, eq } from "drizzle-orm";
 
