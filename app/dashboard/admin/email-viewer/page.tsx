@@ -140,6 +140,11 @@ const sampleData: Record<NotificationType, SampleData> = {
         link: "/dashboard",
         triggerUser: { id: "user-123", name: "Alex Morgan" },
     },
+    SITE_CONFIG_UPDATED: {
+        link: "/dashboard/admin/settings",
+        triggerUser: { id: "user-123", name: "Alex Morgan" },
+        updatedKeys: ["auth.defaultUserRole"],
+    },
 };
 
 const formatNotificationName = (type: NotificationType) =>

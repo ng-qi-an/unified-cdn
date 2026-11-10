@@ -88,7 +88,7 @@ export default function GeneralSiteSettings({siteConfig}: {siteConfig: GetSiteCo
                 </FieldGroup>
             </CardContent>
             <CardFooter>
-                <Button disabled={!changed} type="submit">Save</Button>
+                <Button disabled={!changed || submitting} type="submit">Save</Button>
                 {changed && <Button className="ml-auto" variant="ghost" type="button" onClick={()=>{
                     setAllowSignups(siteConfig.auth.allowSignups);
                     setDefaultRole(siteConfig.auth.defaultUserRole);

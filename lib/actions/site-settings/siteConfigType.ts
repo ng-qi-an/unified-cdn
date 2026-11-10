@@ -9,12 +9,15 @@ export type SiteConfigType = {
     notifications: {
         methods: {
             email: {
+                linked: boolean,
                 resendApiKey: string | null,
                 emailOrigin: string | null
             },
             telegram?: {
+                linked: boolean,
                 telegramBotToken: string | null,
-                webhookActive: boolean,
+                telegramBotUsername: string | null,
+                webhookBaseUrl: string | null,
             }
         }
     },
@@ -31,12 +34,15 @@ export const defaultSiteConfig: SiteConfigType = {
     notifications: {
         methods: {
             email: {
+                linked: false,
                 resendApiKey: null,
                 emailOrigin: null
             },
             telegram: {
+                linked: false,
                 telegramBotToken: null,
-                webhookActive: false,
+                telegramBotUsername: null,
+                webhookBaseUrl: null,
             }
         }
     },
