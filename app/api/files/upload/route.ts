@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, UnauthorisedError } from "@/lib/errors";
-import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrUser } from "@/lib/permissions/serverPermissionHelpers";
+import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrCodeOrUser } from "@/lib/permissions/serverPermissionHelpers";
 import { HCDNClient } from "@/lib/providers/hcdn/client";
 import { HCDNAuthenticationError } from "@/lib/providers/hcdn/errors";
 import { convertUnit } from "@/lib/unitConverter";
@@ -18,11 +18,12 @@ import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequests
 import { eq, sum } from "drizzle-orm";
 import passLimit from "@/lib/actions/files/passLimit";
 import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
+import { GrantCodeActions } from "@/lib/actions/files/grant-codes/grantCodeActions";
 
 const maxFileSize = convertUnit(0.5, "gb", "b"); // 0.5 GB in bytes
 const maxFiles = 20; // Maximum number of files allowed
 
-export const POST = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
+export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, apiKey, user, code) => {
     const siteConfig = await getSiteConfig();
     if (!siteConfig.general.timezone){
         return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
@@ -40,6 +41,19 @@ export const POST = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
         if (files.some(file => file.size > maxFileSize)) {
             return errorToResponse(new InvalidConfigurationError("One or more files exceed the maximum allowed size of 0.5 GB."));
         }
+        const incomingSize = files.reduce((acc, file) => acc + file.size, 0);
+        if (code){
+            const codeBody = code.data as GrantCodeActions["UPLOAD_FILES"];
+            if (codeBody.maximumTotalSize && incomingSize > codeBody.maximumTotalSize){
+                return Response.json({error: "LIMIT_EXCEEDED", message: `Uploading your payload would exceed the grant code's maximum total size by ${incomingSize - codeBody.maximumTotalSize} bytes.`, exceedsBy: incomingSize - codeBody.maximumTotalSize}, {status: 400});
+            } else if (codeBody.maximumFileSize !== undefined && files.some(file => file.size > codeBody.maximumFileSize!)){
+                return Response.json({error: "LIMIT_EXCEEDED", message: `One or more files exceed the grant code's maximum allowed file size of ${codeBody.maximumFileSize} bytes.`}, {status: 400});
+            } else if (codeBody.fileCount && files.length != codeBody.fileCount){
+                return Response.json({error: "FILE_COUNT_MISMATCH", message: `This code is meant to upload exactly ${codeBody.fileCount} files. You provided ${files.length}.`}, {status: 400});
+            } else if (codeBody.allowedFileTypes && !files.every(file => codeBody.allowedFileTypes!.includes(file.type))){
+                return Response.json({error: "FILE_TYPE_NOT_ALLOWED", message: `One or more files are not of the allowed types for this grant code. Allowed types: ${codeBody.allowedFileTypes.join(", ")}`}, {status: 400});
+            }
+        }
         let appData: Pick<Application, "id" | "limit"> & { database: { provider: string, id: string, keys: any | undefined, limit: number } | null } | null = null;
         if (apiKey){
             appData = await db.query.applications.findFirst({where: {id: apiKey.metadata?.appId}, with: {database: {columns: {provider: true, id: true, keys: true, limit: true}}}, columns: {id: true, limit: true}}) ?? null;
@@ -53,7 +67,6 @@ export const POST = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
         if (!appData) {
             return errorToResponse(new UnauthorisedError());
         }
-        const incomingSize = files.reduce((acc, file) => acc + file.size, 0);
         if (appData.limit > 0){
             const totalAppSize = (await db.select({ totalSize: sum(filesDb.size) }).from(filesDb).where(eq(filesDb.applicationId, appData.id)))[0]?.totalSize;
             const passedApp = passLimit({incomingSize, currentSize: totalAppSize ? Number(totalAppSize) : 0, limit: appData.limit})

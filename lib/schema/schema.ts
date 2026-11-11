@@ -4,6 +4,7 @@ import type { AppLogCode, AuditLogCode, DbLogCode } from "../actions/logs/codes"
 import { AnalyticsEventType } from "../actions/analytics/eventTypes";
 import { NotificationType } from "../actions/notifications/notificationTypes";
 import { SiteConfigType } from "../actions/site-settings/siteConfigType";
+import { GrantCodeAction } from "../actions/files/grant-codes/grantCodeActions";
 
 export const databases = pgTable("databases", {
     id: text("id").primaryKey(),
@@ -43,6 +44,16 @@ export const files = pgTable("files", {
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
+
+export const grantCodes = pgTable("grant_codes", {
+    code: text("code").primaryKey(),
+    action: text("action").$type<GrantCodeAction>().notNull(),
+    data: jsonb("data").$type<Record<string, any>>().notNull(),
+    applicationId: text("application_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+    apiKeyId: text("api_key_id").notNull().references(() => apikey.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+}) 
 
 export const appLogs = pgTable("app_logs", {
     id: text("id").primaryKey(),
