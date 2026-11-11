@@ -6,7 +6,7 @@ import EmailSectionHero from "./EmailSectionHero";
 import { TZDate } from "@date-fns/tz";
 
 export default function UserBannedAdmin(props: Parameters<typeof NotificationTypes.USER_BANNED_ADMIN>[0]) {
-    const expiryDate = props.expiresAt ? new TZDate(props.expiresAt, process.env.NEXT_PUBLIC_TIMEZONE) : null;
+    const expiryDate = props.expiresAt ? new TZDate(props.expiresAt, props.timezone) : null;
     return <EmailTemplate>
             <EmailSectionHero icon={Ban} title="A user has been banned." subtitle={<>A user, <strong>{props.user.name}</strong> has been banned by {props.triggerUser.name}.</>} />
             <Section>

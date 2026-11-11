@@ -133,13 +133,13 @@ export const NotificationTypes = {
         link: props.link,
         emailTemplate: <UserRoleChangedAdmin {...props}/>
     }),
-    "USER_BANNED_USER": (props: {reason: string, expiresAt: Date | undefined} & DefaultNotificationParameters): NotificationConfigurationType => ({
+    "USER_BANNED_USER": (props: {reason: string, expiresAt: Date | undefined, timezone: string} & DefaultNotificationParameters): NotificationConfigurationType => ({
         title: `User banned`,
         description: `${props.triggerUser.name} banned your account. Reason: ${props.reason}. Your ban will expire on ${props.expiresAt?.toLocaleString(undefined, {dateStyle: "long", timeStyle: "short"}) ?? "never"}.`,
         link: props.link,
         emailTemplate: <UserBannedUser {...props}/>
     }),
-    "USER_BANNED_ADMIN": (props: {user: {name: string}, reason: string, expiresAt: Date | undefined} & DefaultNotificationParameters): NotificationConfigurationType => ({
+    "USER_BANNED_ADMIN": (props: {user: {name: string}, reason: string, expiresAt: Date | undefined, timezone: string} & DefaultNotificationParameters): NotificationConfigurationType => ({
         title: `User banned`,
         description: `${props.triggerUser.name} banned user ${props.user.name}. Reason: ${props.reason}. Their ban will expire on ${props.expiresAt?.toLocaleString(undefined, {dateStyle: "long", timeStyle: "short"}) ?? "never"}.`,
         link: props.link,

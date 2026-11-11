@@ -3,6 +3,7 @@ import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequests
 import updateSizeAnalyticsEvent from "@/lib/actions/analytics/updateSizeAnalyticsEvent";
 import { makeAppLog } from "@/lib/actions/logs/appLog";
 import { makeDbLog } from "@/lib/actions/logs/dbLog";
+import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, NotFoundError, UnauthorisedError } from "@/lib/errors";
 import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrUser } from "@/lib/permissions/serverPermissionHelpers";
@@ -15,8 +16,9 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { eq } from "drizzle-orm";
 
 export const DELETE = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id: string }> }, apiKey, user) => {
-    if (!process.env.NEXT_PUBLIC_TIMEZONE){
-        return errorToResponse(new InvalidConfigurationError("The NEXT_PUBLIC_TIMEZONE environment variable is not set."));
+    const siteConfig = await getSiteConfig();
+    if (!siteConfig.general.timezone){
+        return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
     }
     try {
         const { id } = await ctx.params;
@@ -71,9 +73,9 @@ export const DELETE = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id
         }
         await makeAppLog({appId: file.applicationId, code: "FILE_DELETED", data: {files: [file.id]}, userId: user?.id, apiKeyId: apiKey?.id});
         await makeDbLog({dbId: file.databaseId, code: "FILE_DELETED", data: {files: [file.id]}, userId: user?.id, appId: file.applicationId});
-        await updateRequestsAnalyticsEvent({increment: 1, appId: file.applicationId, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
-        await updateFilesAnalyticsEvent({increment: -1, appId: file.applicationId, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
-        await updateSizeAnalyticsEvent({increment: -file.size, appId: file.applicationId, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
+        await updateRequestsAnalyticsEvent({increment: 1, appId: file.applicationId, timezone: siteConfig.general.timezone});
+        await updateFilesAnalyticsEvent({increment: -1, appId: file.applicationId, timezone: siteConfig.general.timezone});
+        await updateSizeAnalyticsEvent({increment: -file.size, appId: file.applicationId, timezone: siteConfig.general.timezone});
         return Response.json({ message: "File deleted successfully" }, { status: 200 });
     } catch (error) {
         console.error("Error deleting file:", error);

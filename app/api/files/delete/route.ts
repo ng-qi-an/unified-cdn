@@ -10,11 +10,13 @@ import { makeDbLog } from "@/lib/actions/logs/dbLog";
 import updateSizeAnalyticsEvent from "@/lib/actions/analytics/updateSizeAnalyticsEvent";
 import updateFilesAnalyticsEvent from "@/lib/actions/analytics/updateFilesAnalyticsEvent";
 import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequestsAnalyticsEvent";
+import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 
 
 export const DELETE = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
-    if (!process.env.NEXT_PUBLIC_TIMEZONE){
-        return errorToResponse(new InvalidConfigurationError("The NEXT_PUBLIC_TIMEZONE environment variable is not set."));
+    const siteConfig = await getSiteConfig();
+    if (!siteConfig.general.timezone){
+        return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
     }
     try {
         const data = await req.json();
@@ -74,9 +76,9 @@ export const DELETE = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
             const response = await deleteFiles({filesFromDb: filesFromDb, keys: databaseKeys, provider: databaseProvider ?? ""});
             if (appId){
                 await makeAppLog({appId: appId, code: "FILE_DELETED", data: {files: response.deleted}, userId: user?.id, apiKeyId: apiKey?.id});
-                await updateRequestsAnalyticsEvent({increment: 1, appId: appId, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
-                await updateFilesAnalyticsEvent({increment: response.deleted.length, appId: appId, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
-                await updateSizeAnalyticsEvent({increment: -(filesFromDb.filter((file)=> response.deleted.includes(file.id)).reduce((acc, file) => acc + file.size, 0)), appId: appId, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
+                await updateRequestsAnalyticsEvent({increment: 1, appId: appId, timezone: siteConfig.general.timezone});
+                await updateFilesAnalyticsEvent({increment: response.deleted.length, appId: appId, timezone: siteConfig.general.timezone});
+                await updateSizeAnalyticsEvent({increment: -(filesFromDb.filter((file)=> response.deleted.includes(file.id)).reduce((acc, file) => acc + file.size, 0)), appId: appId, timezone: siteConfig.general.timezone});
             } else {
                 const filesSortedByApp: Record<string, {id: string, key: string, size: number, applicationId: string}[]> = {};
                 filesFromDb.filter((file)=> response.deleted.includes(file.id)).map((file)=>{
@@ -84,9 +86,9 @@ export const DELETE = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
                 })
                 await Promise.all(Object.keys(filesSortedByApp).map(async(appId)=>{
                     await makeAppLog({appId: appId, code: "FILE_DELETED", data: {files: filesSortedByApp[appId].map(file => file.id)}, userId: user?.id});
-                    await updateRequestsAnalyticsEvent({increment: 1, appId: appId, timezone: process.env.NEXT_PUBLIC_TIMEZONE!});
-                    await updateFilesAnalyticsEvent({increment: filesSortedByApp[appId].length, appId: appId, timezone: process.env.NEXT_PUBLIC_TIMEZONE!});
-                    await updateSizeAnalyticsEvent({increment: -filesSortedByApp[appId].reduce((acc, file) => acc + file.size, 0), appId: appId, timezone: process.env.NEXT_PUBLIC_TIMEZONE!});
+                    await updateRequestsAnalyticsEvent({increment: 1, appId: appId, timezone: siteConfig.general.timezone});
+                    await updateFilesAnalyticsEvent({increment: filesSortedByApp[appId].length, appId: appId, timezone: siteConfig.general.timezone});
+                    await updateSizeAnalyticsEvent({increment: -filesSortedByApp[appId].reduce((acc, file) => acc + file.size, 0), appId: appId, timezone: siteConfig.general.timezone});
                 }))
             }
             await makeDbLog({dbId: databaseId, code: "FILE_DELETED", data: {files: response.deleted}, userId: user?.id, appId: appId});

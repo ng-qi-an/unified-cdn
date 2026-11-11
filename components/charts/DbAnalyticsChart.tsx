@@ -6,6 +6,7 @@ import { getDateRange } from "@/lib/time";
 import getGroupedAnalyticsChartData from "@/lib/actions/analytics/getGroupedAnalyticsChartData";
 import { convertFromBytesToSensible } from "@/lib/unitConverter";
 import { cn } from "cn";
+import { useSiteConfig } from "../providers/site-config-provider";
 
 export default function DbAnalyticsChart({data, showLimit, limit, alerts, apps, createdAt, showOverall, limitHeight}: {data: AppAnalytics[], showLimit?: boolean, limit?: number, alerts?: number[], apps: {id: string, name: string}[], createdAt: Date, showOverall?: boolean, limitHeight?: boolean}){
     const chartConfig: ChartConfig = {}
@@ -22,14 +23,15 @@ export default function DbAnalyticsChart({data, showLimit, limit, alerts, apps, 
           }
       })
     }
-    if (!process.env.NEXT_PUBLIC_TIMEZONE){
+    const siteConfig = useSiteConfig();
+    if (!siteConfig.general.timezone){
       return <p>TIMEZONE NOT SET</p>
     }
-    const {start, end} = getDateRange(new Date(new Date().getTime() - 29 * 24 * 60 * 60 * 1000), 30, process.env.NEXT_PUBLIC_TIMEZONE)
+    const {start, end} = getDateRange(new Date(new Date().getTime() - 29 * 24 * 60 * 60 * 1000), 30, siteConfig.general.timezone)
     if (createdAt.getTime() > start.getTime()){
         start.setTime(createdAt.getTime())
     }
-    let chartData = getGroupedAnalyticsChartData({data, timezone: process.env.NEXT_PUBLIC_TIMEZONE, startDate: start, endDate: end})
+    let chartData = getGroupedAnalyticsChartData({data, timezone: siteConfig.general.timezone, startDate: start, endDate: end})
     if (showOverall){
       chartData = chartData.map((dataPoint)=> {
           return {date: dataPoint.date, total: Object.values(dataPoint).filter((value)=> typeof value === "number").reduce((acc, value)=> acc + (value as number), 0)}

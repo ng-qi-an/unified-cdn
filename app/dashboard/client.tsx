@@ -4,6 +4,7 @@ import Dashboard from "@/components/navigation/Dashboard";
 import DashboardBody from "@/components/navigation/DashboardBody";
 import DashboardHeader from "@/components/navigation/DashboardHeader";
 import DashboardSectionHeader from "@/components/navigation/DashboardSectionHeader";
+import { useSiteConfig } from "@/components/providers/site-config-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList, ComboboxTrigger } from "@/components/ui/combobox";
@@ -19,7 +20,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function ClientRenderedDashboardPage({adminView, isAdmin, user, fetchedApps, fetchedDbs}: {adminView: boolean, isAdmin: boolean, user: User, fetchedApps: (Application & {files: {size: number, createdAt: Date}[], appAnalytics: AppAnalytics[]})[], fetchedDbs: (Database & {files: {size: number, createdAt: Date}[]})[]}){
-    const {start: startDate, end: endDate} = getDateRange(new Date(), 1, process.env.NEXT_PUBLIC_TIMEZONE!);
+    const siteConfig = useSiteConfig();
+    const {start: startDate, end: endDate} = getDateRange(new Date(), 1, siteConfig.general.timezone);
     const allAppFiles = fetchedApps.flatMap((app)=> app.files)
     const allDbFiles = fetchedDbs.flatMap((db)=> db.files)
     const convertedAppFilesSize = convertFromBytesToSensible(allAppFiles.reduce((acc, file)=> acc + file.size, 0))

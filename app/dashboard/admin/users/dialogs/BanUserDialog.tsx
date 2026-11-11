@@ -1,5 +1,6 @@
 'use client';
 
+import { useSiteConfig } from "@/components/providers/site-config-provider";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -17,6 +18,7 @@ export default function BanUserDialog({userId, userName, userEmail, userNotifPre
     const [hasExpiry, setHasExpiry] = useState(false);
     const [expiryDate, setExpiryDate] = useState(formatLocalDateTime(new Date()));
     const { data } = authClient.useSession();
+    const siteConfig = useSiteConfig();
     useEffect(()=>{
         if (open){
             setReason("No reason provided.");
@@ -47,8 +49,8 @@ export default function BanUserDialog({userId, userName, userEmail, userNotifPre
                     })
                 }
                 await makeAuditLogClient({userId: data!.user.id, code: "USER_BANNED", data: {user: {id: userId, name: userName}, reason: reason ?? "No reason provided.", expiresTimestamp: hasExpiry ? new Date(expiryDate).getTime() : undefined}});
-                await sendNotificationClient({type: "USER_BANNED_ADMIN", user: {name: userName}, reason: reason, expiresAt: hasExpiry ? new Date(expiryDate) : undefined, triggerUser: {id: data!.user.id, name: data!.user.name}, userGroup: "admins", link: `/dashboard/admin/users/${userId}`});
-                await sendNotificationClient({type: "USER_BANNED_USER", reason: reason, expiresAt: hasExpiry ? new Date(expiryDate) : undefined, triggerUser: {id: data!.user.id, name: data!.user.name}, specificUsers: [{name: userName, id: userId, email: userEmail, notif_preferences: userNotifPreferences}]});
+                await sendNotificationClient({type: "USER_BANNED_ADMIN", user: {name: userName}, reason: reason, expiresAt: hasExpiry ? new Date(expiryDate) : undefined, timezone: siteConfig.general.timezone, triggerUser: {id: data!.user.id, name: data!.user.name}, userGroup: "admins", link: `/dashboard/admin/users/${userId}`});
+                await sendNotificationClient({type: "USER_BANNED_USER", reason: reason, expiresAt: hasExpiry ? new Date(expiryDate) : undefined, timezone: siteConfig.general.timezone, triggerUser: {id: data!.user.id, name: data!.user.name}, specificUsers: [{name: userName, id: userId, email: userEmail, notif_preferences: userNotifPreferences}]});
                 toast.add({
                     title: "Success",
                     description: "The user has been banned successfully.",

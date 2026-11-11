@@ -1,4 +1,5 @@
 import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequestsAnalyticsEvent";
+import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, NotFoundError } from "@/lib/errors";
 import { errorToResponse } from "@/lib/permissions/serverPermissionHelpers";
@@ -8,8 +9,9 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextRequest } from "next/server";
 
 export const GET = async (req: NextRequest, {params}: {params: Promise<{id: string}>}) => {
-    if (!process.env.NEXT_PUBLIC_TIMEZONE){
-        return errorToResponse(new InvalidConfigurationError("The NEXT_PUBLIC_TIMEZONE environment variable is not set."));
+    const siteConfig = await getSiteConfig();
+    if (!siteConfig.general.timezone){
+        return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
     }
     const {id} = await params;
     const fileData = await db.query.files.findFirst({where: {id}, with: {database: {columns: {provider: true, keys: true}}}});
@@ -19,7 +21,7 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
     if (fileData.database?.provider == "hackclub-cdn"){
         const response = await fetch(`https://cdn.hackclub.com/${fileData.key}/${fileData.name}`);
         const headers = new Headers(response.headers);
-        await updateRequestsAnalyticsEvent({increment: 1, appId: fileData.applicationId, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
+        await updateRequestsAnalyticsEvent({increment: 1, appId: fileData.applicationId, timezone: siteConfig.general.timezone});
         return new Response(response.body, {
             status: response.status,
             statusText: response.statusText,
@@ -39,7 +41,7 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
             const headers = new Headers();
             headers.set("Content-Type", response.ContentType || "application/octet-stream");
             if (response.ContentLength !== undefined) headers.set("Content-Length", response.ContentLength.toString());
-            await updateRequestsAnalyticsEvent({increment: 1, appId: fileData.applicationId, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
+            await updateRequestsAnalyticsEvent({increment: 1, appId: fileData.applicationId, timezone: siteConfig.general.timezone});
             return new Response(response.Body.transformToWebStream(), {
                 headers,
             });

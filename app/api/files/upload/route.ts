@@ -17,13 +17,15 @@ import updateFilesAnalyticsEvent from "@/lib/actions/analytics/updateFilesAnalyt
 import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequestsAnalyticsEvent";
 import { eq, sum } from "drizzle-orm";
 import passLimit from "@/lib/actions/files/passLimit";
+import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 
 const maxFileSize = convertUnit(0.5, "gb", "b"); // 0.5 GB in bytes
 const maxFiles = 20; // Maximum number of files allowed
 
 export const POST = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
-    if (!process.env.NEXT_PUBLIC_TIMEZONE){
-        return errorToResponse(new InvalidConfigurationError("The NEXT_PUBLIC_TIMEZONE environment variable is not set."));
+    const siteConfig = await getSiteConfig();
+    if (!siteConfig.general.timezone){
+        return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
     }
     try {
         const formData = await req.formData();
@@ -80,9 +82,9 @@ export const POST = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
                     size: upload.size
                 }))
                 await db.insert(filesDb).values(normalisedUploads);
-                await updateRequestsAnalyticsEvent({increment: 1, appId: appData.id, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
-                await updateFilesAnalyticsEvent({increment: normalisedUploads.length, appId: appData.id, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
-                await updateSizeAnalyticsEvent({increment: normalisedUploads.reduce((acc, file) => acc + file.size, 0), appId: appData.id, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
+                await updateRequestsAnalyticsEvent({increment: 1, appId: appData.id, timezone: siteConfig.general.timezone});
+                await updateFilesAnalyticsEvent({increment: normalisedUploads.length, appId: appData.id, timezone: siteConfig.general.timezone});
+                await updateSizeAnalyticsEvent({increment: normalisedUploads.reduce((acc, file) => acc + file.size, 0), appId: appData.id, timezone: siteConfig.general.timezone});
                 await makeAppLog({appId: appData.id, code: "FILE_CREATED", data: {files: normalisedUploads.map(f => ({id: f.id, name: f.name, size: f.size}))}, userId: user?.id, apiKeyId: apiKey?.id});
                 await makeDbLog({dbId: appData.database!.id, code: "FILE_CREATED", data: {files: normalisedUploads.map(f => ({id: f.id, name: f.name, size: f.size}))}, appId: appData.id});
                 return Response.json({uploads: normalisedUploads, failed});
@@ -131,9 +133,9 @@ export const POST = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
                 return errorToResponse(new InvalidConfigurationError("All file uploads failed. Please check your configuration and try again."));
             }
             await db.insert(filesDb).values(successFiles);
-            await updateRequestsAnalyticsEvent({increment: 1, appId: appData.id, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
-            await updateFilesAnalyticsEvent({increment: successFiles.length, appId: appData.id, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
-            await updateSizeAnalyticsEvent({increment: successFiles.reduce((acc, file) => acc + file.size, 0), appId: appData.id, timezone: process.env.NEXT_PUBLIC_TIMEZONE});
+            await updateRequestsAnalyticsEvent({increment: 1, appId: appData.id, timezone: siteConfig.general.timezone});
+            await updateFilesAnalyticsEvent({increment: successFiles.length, appId: appData.id, timezone: siteConfig.general.timezone});
+            await updateSizeAnalyticsEvent({increment: successFiles.reduce((acc, file) => acc + file.size, 0), appId: appData.id, timezone: siteConfig.general.timezone});
             await makeAppLog({appId: appData.id, code: "FILE_CREATED", data: {files: successFiles.map(f => ({id: f.id, name: f.name, size: f.size}))}, userId: user?.id, apiKeyId: apiKey?.id});
             await makeDbLog({dbId: appData.database!.id, code: "FILE_CREATED", data: {files: successFiles.map(f => ({id: f.id, name: f.name, size: f.size}))}, userId: user?.id, appId: appData.id});
             return Response.json({uploads: successFiles, failed: failedFiles});
