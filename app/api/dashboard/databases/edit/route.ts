@@ -23,7 +23,7 @@ export const PATCH = verifyUser(async(req: Request, ctx, user) => {
     if (!dbData) {
         return errorToResponse(new NotFoundError("Database is not found or you do not have permission to edit it."));
     }
-    if (dbData.provider == "cloudflare-r2" || dbData.provider == "amazon-s3") {
+    if (dbData.provider.startsWith("s3-")) {
         if (!data.keys.accessUrl || !data.keys.accessKeyId || !data.keys.secretAccessKey || !data.keys.bucketName) {
             return errorToResponse(new InvalidConfigurationError("Access URL, access key ID, secret access key and bucketName are required"));
         }

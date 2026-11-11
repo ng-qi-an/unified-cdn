@@ -20,7 +20,7 @@ export const POST = verifyUserWithPermission(async(user)=>{
     }
     const provider = data.provider;
     const keys = data.keys;
-    if (provider == "cloudflare-r2" || provider == "amazon-s3") {
+    if (provider.startsWith("s3-")) {
         if (!keys.accessUrl || !keys.accessKeyId || !keys.secretAccessKey || !keys.bucketName) {
             return Response.json({ error: "INVALID_CONFIGURATION", message: "Access URL, access key ID, secret access key and bucketName are required" }, { status: 400 });
         }
@@ -31,6 +31,9 @@ export const POST = verifyUserWithPermission(async(user)=>{
                 return Response.json({ error: "INVALID_CONFIGURATION", message: "Check that your access URL, access key ID, and secret access key are valid. Make sure your key has access to list all buckets." }, { status: 401 });
             }
             if (!r.Buckets.find(b => b.Name == keys.bucketName)) {
+                if (provider == "s3-backblaze-b2"){
+                    return Response.json({ error: "INVALID_CONFIGURATION", message: "The bucket you specified does not exist. Create the bucket on your own in Backblaze B2." }, { status: 400 });
+                }
                 try {
                     const createR = await client.send(new CreateBucketCommand({ Bucket: keys.bucketName }));
                     console.log("Create bucket response:", createR);
@@ -97,6 +100,6 @@ export const POST = verifyUserWithPermission(async(user)=>{
         console.error(error);
         return Response.json({ error: "INTERNAL", message: "Unexpected error occurred while creating database."}, {status: 500});
     }
-    await sendNotification("DATABASE_CREATED", {userGroup: "admins", databaseName: payload.name, triggerUser: {id: data.user.id, name: data.user.name}, link: `/dashboard/admin/databases/${payload.id}`});
+    await sendNotification("DATABASE_CREATED", {userGroup: "admins", databaseName: payload.name, triggerUser: {id: user.id, name: user.name}, link: `/dashboard/admin/databases/${payload.id}`});
     return Response.json({ message: "Database created successfully", id: payload.id }, { status: 200 });
 })

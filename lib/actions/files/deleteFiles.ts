@@ -31,7 +31,7 @@ export async function deleteFiles({filesFromDb, keys, provider}: {filesFromDb: {
                 throw error;
             }
         }
-    } else if (provider == "cloudflare-r2" || provider == "amazon-s3") {
+    } else if (provider.startsWith("s3-")) {
         const client = getS3Client(keys.accessUrl, keys.accessKeyId, keys.secretAccessKey);
         try {
             const response = await client.send(new DeleteObjectsCommand({

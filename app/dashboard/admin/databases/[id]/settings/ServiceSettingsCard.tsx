@@ -33,10 +33,10 @@ export default function ServiceSettingsCard({provider, keys, setKeys}: {provider
                     <ProviderSelector disabled value={provider} onChange={(value) => {}} />
                 </Field>
 
-                {provider == "cloudflare-r2" ? <>
+                {provider.startsWith("s3-") ? <>
                     <Field>
                         <FieldLabel>Access URL</FieldLabel>
-                        <Input type="url" value={accessUrl} onChange={(e)=> setAccessUrl(e.target.value)} placeholder={"https://[...].r2.cloudflarestorage.com"} required />
+                        <Input type="url" value={accessUrl} onChange={(e)=> setAccessUrl(e.target.value)} placeholder={provider == "s3-cloudflare-r2" ? "https://[...].r2.cloudflarestorage.com" : provider == "s3-backblaze-b2" ? "https://s3.[...].backblazeb2.com" : provider == "s3-amazon-s3" ?  "https://s3.[...].amazonaws.com" : ""} required />
                         <FieldDescription>This should be a link, not an API key. You should use the S3 configuration.</FieldDescription>
                     </Field>
                     <Field>

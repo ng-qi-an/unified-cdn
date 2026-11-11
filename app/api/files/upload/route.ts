@@ -109,7 +109,7 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
                     return errorToResponse(error);
                 }
             }
-        } else if (appData.database?.provider == "cloudflare-r2" || appData.database?.provider == "amazon-s3") {
+        } else if (appData.database?.provider.startsWith("s3-")) {
             const client = getS3Client(appData.database.keys.accessUrl, appData.database.keys.accessKeyId, appData.database.keys.secretAccessKey);
             const successFiles: typeof filesDb.$inferInsert[] = []
             const failedFiles: {filename: string, reason: string}[] = [];

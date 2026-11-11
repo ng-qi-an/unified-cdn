@@ -102,7 +102,7 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
                 }
             }
             if (promiseResponse.status == "success"){
-                if (database.provider == "cloudflare-r2" || database.provider == "amazon-s3") {
+                if (database.provider.startsWith("s3-")) {
                     const client = getS3Client(database.keys.accessUrl, database.keys.accessKeyId, database.keys.secretAccessKey);
                     try {
                         const r = await client.send(new DeleteBucketCommand({ Bucket: database.keys.bucketName }));

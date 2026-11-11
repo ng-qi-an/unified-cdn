@@ -24,7 +24,7 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
     const [limitUnit, setLimitUnit] = useState<Unit>("gb");
     const [usageAlert, setUsageAlert] = useState("80");
     const [visibility, setVisibility] = useState("private");
-    const [provider, setProvider] = useState("cloudflare-r2");
+    const [provider, setProvider] = useState("");
     // This for HC CDN
     const [apiKey, setApiKey] = useState("");
     // This for R2 / S3.
@@ -45,7 +45,7 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
         </Alert>}
         <form className="w-full h-full flex flex-col min-h-0" onSubmit={async(e)=>{
             e.preventDefault()
-            if (!name  || name.trim() == "" || !limit || !limitUnit || !usageAlert || !visibility || !provider || (provider == "cloudflare-r2" && (!accessUrl || !accessKeyId || !secretAccessKey || !bucketName || !isS3BucketNameValid)) || (provider == "hackclub-cdn" && !apiKey)){
+            if (!name  || name.trim() == "" || !limit || !limitUnit || !usageAlert || !visibility || !provider || (provider.startsWith("s3-") && (!accessUrl || !accessKeyId || !secretAccessKey || !bucketName || !isS3BucketNameValid)) || (provider == "hackclub-cdn" && !apiKey)){
                 setSubmissionError({title: "Required fields missing or invalid", message: "Please fill in all required fields and ensure there are no warnings before submitting."});
                 return;
             }
@@ -62,7 +62,7 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
                 },
                 body: JSON.stringify({
                     provider: provider,
-                    keys: provider == "cloudflare-r2" ? {
+                    keys: provider.startsWith("s3-") ? {
                         accessUrl: accessUrl,
                         accessKeyId: accessKeyId,
                         secretAccessKey: secretAccessKey,
@@ -160,10 +160,10 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
                                     <ProviderSelector value={provider} onChange={(value) => setProvider(value)} />
                                     <FieldDescription className="flex gap-1">Need help setting up? <a href={availableServices.find((s) => s.id === provider)?.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">Open the docs <ExternalLink className="size-4"/></a></FieldDescription>
                                 </Field>
-                                {provider == "cloudflare-r2" ? <>
+                                {provider.startsWith("s3-") ? <>
                                     <Field>
                                         <FieldLabel>Access URL</FieldLabel>
-                                        <Input type="url" value={accessUrl} onChange={(e)=> setAccessUrl(e.target.value)} placeholder={"https://[...].r2.cloudflarestorage.com"} required />
+                                        <Input type="url" value={accessUrl} onChange={(e)=> setAccessUrl(e.target.value)} placeholder={provider == "s3-cloudflare-r2" ? "https://[...].r2.cloudflarestorage.com" : provider == "s3-backblaze-b2" ? "https://s3.[...].backblazeb2.com" : provider == "s3-amazon-s3" ?  "https://s3.[...].amazonaws.com" : ""} required />
                                         <FieldDescription>This should be a link, not an API key. You should use the S3 configuration.</FieldDescription>
                                     </Field>
                                     <Field>
@@ -180,7 +180,7 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
                                         <FieldLabel>Bucket Name</FieldLabel>
                                         <Input type="text" value={bucketName} onChange={(e)=> setBucketName(e.target.value)} required/>
                                         {!bucketName || isS3BucketNameValid ?
-                                            <FieldDescription>The bucket you want to use. We'll create one if it doesn't exist.</FieldDescription>
+                                            <FieldDescription>The bucket you want to use. {provider != "s3-backblaze-b2" ? "We'll create one if it doesn't exist." : "Make sure the bucket already exists."}</FieldDescription>
                                         : <FieldError>Bucket names must be between 3 and 63 characters long, and can only contain lowercase letters, numbers, and hyphens.</FieldError>}
                                     </Field>
                                 </> : provider == "hackclub-cdn" && <>

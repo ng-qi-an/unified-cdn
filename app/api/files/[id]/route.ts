@@ -27,7 +27,7 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
             statusText: response.statusText,
             headers: headers
         });
-    } else if (fileData.database?.provider == "cloudflare-r2" || fileData.database?.provider == "amazon-s3") {
+    } else if (fileData.database?.provider.startsWith("s3-")) {
         const client = getS3Client(fileData.database.keys.accessUrl, fileData.database.keys.accessKeyId, fileData.database.keys.secretAccessKey);
         try {
             const response = await client.send(new GetObjectCommand({

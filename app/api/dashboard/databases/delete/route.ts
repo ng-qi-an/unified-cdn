@@ -41,7 +41,7 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
         }
         console.log("Deleted", dbData.files.length, "files from database", dbData.id);
         await db.delete(databases).where(eq(databases.id, dbData.id));
-        if (dbData.provider == "cloudflare-r2" || dbData.provider == "amazon-s3") {
+        if (dbData.provider.startsWith("s3-")) {
             const client = getS3Client(dbData.keys.accessUrl, dbData.keys.accessKeyId, dbData.keys.secretAccessKey);
             try {
                 const r = await client.send(new DeleteBucketCommand({ Bucket: dbData.keys.bucketName }));
@@ -62,9 +62,9 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
             }
         }
         await makeAuditLog({userId: user.id, code: "DATABASE_DELETED", data: {database: {id: dbData.id, name: dbData.name, provider: dbData.provider}}});
-        await sendNotification("DATABASE_DELETED_ADMIN", {userGroup: "admins", databaseName: dbData.name, ownerName: dbData.owner?.name ?? "Unknown User", triggerUser: {id: data.user.id, name: data.user.name}});
+        await sendNotification("DATABASE_DELETED_ADMIN", {userGroup: "admins", databaseName: dbData.name, ownerName: dbData.owner?.name ?? "Unknown User", triggerUser: {id: user.id, name: user.name}});
         if (dbData.owner) {
-            await sendNotification("DATABASE_DELETED_USER", {specificUsers: [dbData.owner], databaseName: dbData.name, triggerUser: {id: data.user.id, name: data.user.name}});
+            await sendNotification("DATABASE_DELETED_USER", {specificUsers: [dbData.owner], databaseName: dbData.name, triggerUser: {id: user.id, name: user.name}});
         }
         return Response.json({message: "Database deleted successfully!"}, {status: 200});
     } catch (error) {

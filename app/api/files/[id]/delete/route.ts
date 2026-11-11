@@ -50,7 +50,7 @@ export const DELETE = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id
                 console.error("Error deleting file on HCDN:", error);
                 return errorToResponse(error);
             }
-        } else if (file.database?.provider == "cloudflare-r2" || file.database?.provider == "amazon-s3") {
+        } else if (file.database?.provider.startsWith("s3-")) {
             const client = getS3Client(file.database.keys.accessUrl, file.database.keys.accessKeyId, file.database.keys.secretAccessKey);
             try {
                 const response = await client.send(new DeleteObjectCommand({
