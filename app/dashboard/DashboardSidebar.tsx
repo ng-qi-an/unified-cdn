@@ -1,12 +1,12 @@
 import { Label } from "@/components/ui/label";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInput, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { AppWindowMac, Book, Cloud, Database, ExternalLink, Home, Key, Logs, Search, Settings, Shield, Users } from "lucide-react";
-import Link from "next/link";
+import { AppWindowMac, Book, Database, ExternalLink, Home, Key, Logs, Search, Settings, Shield, Users } from "lucide-react";
 import { Suspense } from "react";
 import UserDropdown from "./UserDropdown";
 import DashboardSidebarLink from "./DashboardSidebarLink";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import Logo from "@/components/Logo";
 
 
 export default async function DashboardSidebar() {
@@ -40,8 +40,8 @@ export default async function DashboardSidebar() {
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton className="data-[slot=sidebar-menu-button]:p-2! mt-1 hover:bg-transparent active:bg-transparent">
-                        <Cloud className="size-5.5!"/>
-                        <span className="text-base font-semibold ml-1">Unified CDN</span>
+                        <Logo className="size-5 ml-1"/>
+                        <span className="text-base font-medium">Unified CDN</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>

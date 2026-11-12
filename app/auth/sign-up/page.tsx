@@ -84,7 +84,6 @@ export default function SignInPage() {
         </form>
       </DialogContent>
     </Dialog>
-    <h2 className="text-sm font-medium opacity-50 fixed bottom-6 left-1/2 transform -translate-x-1/2">Made by Unified CDN</h2>
     <form onSubmit={(e)=> {
         e.preventDefault();
         setShowVerifyPassword(true);

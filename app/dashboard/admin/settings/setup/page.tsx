@@ -13,6 +13,7 @@ import { toast } from "@/components/ui/toast";
 import setupSiteConfigClient from "@/lib/actions/site-settings/setupSiteConfigClient";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
+import { defaultSiteConfig } from "@/lib/actions/site-settings/siteConfigType";
 
 export default function SiteSettingsSetupPage(){
     const [timezone, setTimezone] = useState("");
@@ -46,7 +47,15 @@ export default function SiteSettingsSetupPage(){
                         })
                     }
                     setSubmitting(true);
-                    await setupSiteConfigClient({timezone: timezone.trim(), allowSignups: allowSignups})
+                    await setupSiteConfigClient({
+                        general: {
+                            ...defaultSiteConfig.general,
+                            timezone: timezone,
+                        },
+                        auth: {
+                            ...defaultSiteConfig.auth,
+                            allowSignups: allowSignups,
+                    }})
                     setSubmitting(false);
                     router.push("/dashboard/admin/settings")
                 }}>
