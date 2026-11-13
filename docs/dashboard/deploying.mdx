@@ -31,7 +31,7 @@ So far, you have installed Unified CDN and ran it in development mode. Now, you 
   Unified CDN already comes with a Dockerfile (modified from the guide [here](https://docs.docker.com/guides/nextjs/)) Build the image using docker build:
 
   ```bash
-  docker build --secret id=envfile,src=.env -t unified-cdn .
+  docker build -f Dockerfile.docker  --secret id=envfile,src=.env -t unified-cdn .
   ```
   </Tab>
 </Tabs>
