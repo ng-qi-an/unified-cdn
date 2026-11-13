@@ -31,5 +31,5 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/ng-qi-an/unified-cdn:latest
-          secrets: |
+          secret-files: |
             envfile=.env
