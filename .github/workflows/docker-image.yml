@@ -23,4 +23,4 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/ng-qi-an/unified-cdn:latest
-          secret-files: envfile=${{ secrets.ENV_FILE }}
+          secrets: envfile=${{ secrets.ENV_FILE }}
