@@ -17,7 +17,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{secrets.GITHUB_TOKEN }}
-
+      - name: Verify ENV_FILE secret is set
+        run: |
+          if [ -z "${{ secrets.ENV_FILE }}" ]; then
+            echo "Error: ENV_FILE secret is missing or empty."
+            exit 1
+          fi
       - uses: docker/build-push-action@v6
         with:
           context: .
