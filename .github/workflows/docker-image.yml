@@ -23,9 +23,13 @@ jobs:
             echo "Error: ENV_FILE secret is missing or empty."
             exit 1
           fi
+      - name: Create temporary .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
       - uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: ghcr.io/ng-qi-an/unified-cdn:latest
-          secrets: envfile=${{ secrets.ENV_FILE }}
+          secrets: |
+            envfile=.env
