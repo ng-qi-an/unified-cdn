@@ -1,0 +1,145 @@
+---
+title: "Deploying"
+description: "Deploying Unified CDN to production."
+---
+So far, you have installed Unified CDN and ran it in development mode. Now, you can deploy it to production to use in your apps.
+## Prerequisites
+1. You have completed the [installation](/dashboard/installation) steps and have a working Unified CDN instance.
+2. You have a domain name and a **server** to host Unified CDN. This can be a VPS, cloud server, or any other hosting solution that **supports Node.js**.
+<Warning>
+  **You must not use a serverless platform to host**.
+  
+  Serverless platforms like Vercel and Netlify are not suitable as they often impose a max request body payload, blocking files from being uploaded directly to Unified CDN. [See here](https://vercel.com/docs/functions/limitations#request-body-size) for more information.
+</Warning>
+
+## Build step
+<Tabs>
+  Unified CDN is made with Next.js and comes **unbuilt**. To push it to production, you have to first build the project. Run the following command in your terminal:
+  <Tab title="Node">
+    <Info>
+      Before running any commands, make sure the `OUTPUT_METHOD` variable in your `.env` file is set to `node`. This will ensure that Unified CDN is built for a Node.js environment.
+    </Info>
+    Run the build script using npm:
+    ```bash
+    npm run build
+    ``` 
+  </Tab>
+  <Tab title="Docker">
+  <Info>
+    Before running any commands, make sure the `OUTPUT_METHOD` variable in your `.env` file is set to `docker`. This will ensure that Unified CDN is built for a Node.js environment.
+  </Info>
+  Unified CDN already comes with a Dockerfile (modified from the guide [here](https://docs.docker.com/guides/nextjs/)) Build the image using docker build:
+
+  ```bash
+  docker build --secret id=envfile,src=.env -t unified-cdn .
+  ```
+  </Tab>
+</Tabs>
+
+## Hosting
+Once the build step is completed, you can host it on your server.
+<Tabs>
+  <Tab title="Node">
+  ```bash
+  npm run start 
+  ```
+  In a **production environment**, you would typically use a process manager like [PM2](https://pm2.keymetrics.io/) to keep Unified CDN running in the background, even after you close your terminal or restart your server. You can install PM2 globally with:
+  ```bash
+  npm install -g pm2
+  ```
+  Then run the following command to start Unified CDN with PM2:
+  ```bash
+  pm2 start ecosystem.config.cjs
+  ```
+  This creates a new **pm2 process**, with the name `unified-cdn`. Use the name `unified-cdn` if you want to start, stop or restart Unified CDN with PM2. For example, to restart Unified CDN, run:
+  ```bash
+  pm2 restart unified-cdn
+  ```
+  For more information on PM2 process management, see [here](https://pm2.keymetrics.io/docs/usage/process-management/).
+
+  If you want to make Unified CDN persist across server boots, check the [PM2 startup guide](https://pm2.keymetrics.io/docs/usage/startup/).
+  </Tab>
+  <Tab title="Docker">
+    Create and run a **docker container** from the image built:
+    ```bash
+    docker run --name unified-cdn -d --env-file .env -p 3000:3000 unified-cdn
+    ```
+    You can now access it at port `3000`. To use a different port, simply modify the `-p` flag: `-p [host_port]:[container_port]`
+
+    Use the container name `unified-cdn` to start, stop or restart Unified CDN. For example, to restart Unified CDN, run:
+    ```bash
+    docker restart unified-cdn
+    ```
+  </Tab>
+</Tabs>
+## Updates
+When a new version of Unified CDN is released, you can update your instance by following these steps:
+<Steps>
+  <Step title="Stop Unified CDN">
+  <Tabs>
+  <Tab title="Node">
+    Stop Unified CDN with PM2:
+    ```bash
+    pm2 stop unified-cdn
+    ```
+    </Tab>
+    <Tab title="Docker">
+    Stop Unified CDN with Docker:
+    ```bash
+    docker stop unified-cdn
+    ```
+    </Tab>
+  </Tabs>
+  </Step>
+  <Step title="Pull latest changes">
+    Get the latest changes from the repository:
+  ```bash
+  git pull
+  ```
+  </Step>
+  <Step title="Install dependencies">
+    <Tabs>
+      <Tab title="Node">
+        Install any new packages from the update:
+      ```bash
+      npm install
+      ```
+      </Tab>
+      <Tab title="Docker">
+        No need to install packages manually. The Dockerfile handles this.
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Rebuild Unified CDN">
+  <Tabs>
+    <Tab title="Node">
+      Rebuild Unified CDN to apply the updates:
+    ```bash
+    npm run build
+    ```
+    </Tab>
+    <Tab title="Docker">
+      Rebuild Unified CDN to apply the updates:
+    ```bash
+    docker build --secret id=envfile,src=.env -t unified-cdn .
+    ```
+    </Tab>
+  </Tabs>
+  </Step>
+  <Step title="Restart Unified CDN">
+    <Tabs>
+      <Tab title="Node">
+        Restart Unified CDN with PM2:
+      ```bash
+      pm2 restart unified-cdn
+      ```
+      </Tab>
+      <Tab title="Docker">
+        Restart Unified CDN with Docker:
+      ```bash
+      docker restart unified-cdn
+      ```
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>

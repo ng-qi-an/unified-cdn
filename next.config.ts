@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
     },
   },
   allowedDevOrigins: ['unified-cdn-tunnel.ngqian.com'],
+  output: process.env.OUTPUT_METHOD == "docker" ? "standalone" : undefined,
 };
 
 export default nextConfig;

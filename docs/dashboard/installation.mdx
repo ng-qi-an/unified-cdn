@@ -1,0 +1,117 @@
+---
+title: "Installation"
+description: "The fastest way to create your own Unified CDN instance."
+---
+import { BetterAuthSecretGenerator } from "/snippets/BetterAuthSecretGenerator.jsx"
+
+Unified CDN is self-hosted, and runs on pretty much any device connected to the internet. You can deploy Unified CDN for an organisation, your team, or yourself.
+
+## Prerequisites
+
+Before you begin, you must have:
+
+- A **device/server capable** of running a web server (minimum 0.5GB of ram)
+- A **postgres** database that your device can reach. (Serverless platforms like Neon works!)
+- Installed [Node.js](https://nodejs.org/en/download) (minimally v20.9.0) & [Git](https://git-scm.com/install/)
+- Reasonable knowledge of git and using the **terminal**.
+
+## Get started
+
+<Steps>
+  <Step title="Install">
+    Choose where Unified CDN should be stored, then clone the Unified CDN repository from Github on your device using git.
+
+    ```bash
+    cd [LOCATION-WHERE-UNIFIED-CDN-SHOULD-BE]
+    git clone https://github.com/ng-qi-an/unified-cdn.git
+    ```
+    Move to the project folder and install the dependencies using npm.
+
+    ```bash
+    cd unified-cdn
+    npm install
+    ```
+  </Step>
+  <Step title="Setup configuration">
+    Open up the project in a file manager and rename `.env.example` to `.env` . On web servers, you can run `mv .env.example .env` instead.
+
+    Open the `.env` file in a text editor. On web servers, run `nano .env`. 
+    
+  </Step>
+  <Step title="Configure Authentication">
+    We use [BetterAuth](https://better-auth.com) for authentication.
+    
+    The variable `BETTER_AUTH_URL` is the URL of your ***Unified CDN instance***, where you intend to host Unified CDN. For example:
+    ```env .env
+    BETTER_AUTH_URL=https://unified-cdn-demo.ngqian.com
+    ```
+    Next, add the same URL to `TRUSTED_ORIGINS`. There can be multiple origins if you intend to host Unified CDN on multiple domains:
+    ```env .env
+    TRUSTED_ORIGINS=https://unified-cdn-demo.ngqian.com,https://[...].com
+    ```
+    `BETTER_AUTH_SECRET` is a secret key used to encrypt authentication details. This should be a random key. Use your own random key, or generate one:
+    <BetterAuthSecretGenerator />
+    Afterwards, copy the generated key and paste it into the `.env` file. For example:
+    ```env .env
+    BETTER_AUTH_SECRET=YOUR_GENERATED_SECRET_KEY
+    ```
+    **Example configuration:**
+    ```env .env
+    BETTER_AUTH_URL=https://unified-cdn-demo.ngqian.com
+    TRUSTED_ORIGINS=https://unified-cdn-demo.ngqian.com,https://[...].co,
+    BETTER_AUTH_SECRET=YOUR_GENERATED_SECRET_KEY
+    ```
+  </Step>
+  <Step title="Configure a database">
+  Unified CDN uses a Postgres database, which are relational in nature and easier to develop with. You can use a Postgres database hosted on your server, a cloud service, or serverless platforms like [Neon](https://neon.tech/).
+    <Tabs>
+      <Tab title="Hosted postgres">
+      Follow the instructions provided by your hosting provider, or search online for a guide on creating a Postgres database.
+
+      Once you have created a Postgres database, create a connection string in the `.env` file. For example:
+      
+      ```env .env
+      DATABASE_URL=postgres://username:password@host:port/database
+      ```
+      </Tab>
+
+      <Tab title="Serverless postgres">
+      Follow the instructions provided by your serverless provider. You should typically receive a connection string.
+      
+      Once you have created a Postgres database, copy the connection string and paste it into the `.env` file. For example:
+      ```env .env
+      DATABASE_URL=postgres://[...]
+      ```
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step title="Configure deployment">
+    Unified CDN can be ran in two ways: **Node.js** or **Docker**. Choose one of the two methods below, and set the `OUTPUT_METHOD` variable in your `.env` file accordingly.
+    <Tabs>
+      <Tab title="Node">
+      For running directly with `npm run start`. This is the default.
+        ```env .env
+        OUTPUT_METHOD=node
+        ```
+      </Tab>
+      <Tab title="Docker">
+      For running in docker to containerise Unified CDN.
+        ```env .env
+        OUTPUT_METHOD=docker
+        ```
+      </Tab>
+    </Tabs>
+    This will be used **later** in the deployment step.
+  </Step>
+  <Step title="Test it">
+    **Congratulations, you have installed Unified CDN!** If you want to, you can test your configuration before deploying to production. This is optional.
+
+    Run the following command to start Unified CDN in **development mode**:
+    ```bash
+    npm run dev
+    ```
+    Then, navigate to http://localhost:3000 on your machine (where you installed Unified CDN). You should load into a setup page, where you can complete the rest of the Unified CDN immediately.
+
+    When the setup completes with no error, your configuration is valid, and you can proceed to [deploying](/dashboard/deploying).
+  </Step>
+</Steps>
