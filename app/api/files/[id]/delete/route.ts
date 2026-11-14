@@ -65,7 +65,7 @@ export const DELETE = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id
                 return errorToResponse(error);
             }
         } else {
-            return errorToResponse(new InvalidConfigurationError("The api key's database provider is not supported for file uploads."));
+            return errorToResponse(new InvalidConfigurationError("The configured database provider is not supported."));
         }
         const response = await db.delete(files).where(eq(files.id, id));
         if (response.rowCount === 0){

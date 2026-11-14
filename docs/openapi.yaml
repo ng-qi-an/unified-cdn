@@ -1,0 +1,317 @@
+openapi: 3.1.0
+info:
+  title: Unified CDN API
+  description: Interact with the Unified CDN system.
+  version: 0.1.0
+
+servers:
+  - url: https://{{UNIFIED_CDN_DOMAIN}}/api
+    description: Production server where your Unified CDN is hosted.
+
+paths:
+  /files/{id}/view:
+    get:
+      summary: Get file contents
+      description: Retrieves a file's contents by its ID. Use this endpoint to download or display the file in your application. To get a file's details, use [this](/api/files/get-file-data) instead.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: >
+            Successfully retrieved the file. 
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/UnauthorisedError'
+        "400":
+          description: Bad request due to invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                timezone_not_set:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The site's timezone is not set."
+                provider_failed:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Could not connect to database provider. Please check your database key configurations."
+                provider_unsupported:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The configured database provider is not supported."                  
+  /files/{id}/get:
+    get:
+      summary: Get file details
+      description: Retrieves a file's details by its ID. Use this endpoint to get file metadata.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successfully retrieved the file details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/UnauthorisedError'
+        "400":
+          description: Bad request due to invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                timezone_not_set:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The site's timezone is not set."
+  /files/{id}/delete:
+    delete:
+      summary: Delete a file
+      description: Deletes a file by its ID.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successfully deleted the file.
+          content:
+            application/json:
+              example:
+                message: "File deleted successfully."
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/UnauthorisedError'
+        "400":
+          description: Bad request due to invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                timezone_not_set:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The site's timezone is not set."
+                provider_failed:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Could not connect to database provider. Please check your database key configurations."
+                provider_unsupported:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The configured database provider is not supported."                  
+  /files/upload:
+    post:
+      summary: Upload file(s)
+      description: Upload one or more files to the platform.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                appId:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "200":
+          description: Successfully uploaded the file(s).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploads:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/File'
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                        reason:
+                          type: string
+        "401":
+          description: The request lacks valid authentication credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorised:
+                  value:
+                    error: "UnauthorisedError"
+                    message: "You are unauthorised to perform this action."
+                provider_failed:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Could not connect to database provider. Please check your database key configurations."
+        "400":
+          description: Bad request due to invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                timezone_not_set:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The site's timezone is not set."
+                missing_app_id:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Missing appId in form data."
+                no_files_uploaded:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "No files were uploaded."
+                max_files_exceeded:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "You can only upload a maximum of ... files at a time."
+                max_file_size_exceeded:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "One or more files exceed the maximum allowed size of ..."
+                invalid_file_types:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "One or more files are not of the allowed types for this grant code."
+                all_files_failed:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "All file uploads failed. Please check your configuration and try again."
+                provider_unsupported:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The configured database provider is not supported."                  
+        "403":
+          description: Forbidden due to grant code restrictions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                exceeded_application_limit:
+                  value:
+                    error: "LimitExceededError"
+                    exceedsBy: 12345
+                    message: "Uploading your payload would exceed the application's file limit by ... bytes."
+                exceeded_database_limit:
+                  value:
+                    error: "LimitExceededError"
+                    exceedsBy: 67890
+                    message: "Uploading your payload would exceed the database's file limit by ... bytes."
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+    File:
+      type: object
+      properties:
+        id:
+          type: string
+        applicationId:
+          type: string
+        databaseId:
+          type: string
+        key:
+          type: string
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - applicationId
+        - databaseId
+        - key
+        - name
+        - size
+        - contentType
+        - createdAt
+        - updatedAt
+  responses:
+    NotFound:
+      description: The specified resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            notFound:
+              value:
+                error: "NotFoundError"
+                message: "The requested resource was not found."
+    UnauthorisedError:
+      description: The request lacks valid authentication credentials.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            unauthorised:
+              value:
+                error: "UnauthorisedError"
+                message: "You are unauthorised to perform this action."
+    InvalidConfigurationError:
+      description: The request is invalid due to misconfiguration.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalidConfig:
+              value:
+                error: "InvalidConfigurationError"
+                message: "The configuration provided is invalid or missing."

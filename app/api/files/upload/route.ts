@@ -33,7 +33,7 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
         const files = formData.getAll("files") as File[];
         console.log("files to upload:", files.length)
         if (files.length === 0) {
-            return errorToResponse(new InvalidConfigurationError());
+            return errorToResponse(new InvalidConfigurationError("No files were uploaded."));
         }
         if (files.length > maxFiles){
             return errorToResponse(new InvalidConfigurationError("You can only upload a maximum of 20 files at a time."));
@@ -45,13 +45,13 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
         if (code){
             const codeBody = code.data as GrantCodeActions["UPLOAD_FILES"];
             if (codeBody.maximumTotalSize && incomingSize > codeBody.maximumTotalSize){
-                return Response.json({error: "LIMIT_EXCEEDED", message: `Uploading your payload would exceed the grant code's maximum total size by ${incomingSize - codeBody.maximumTotalSize} bytes.`, exceedsBy: incomingSize - codeBody.maximumTotalSize}, {status: 400});
+                return errorToResponse(new InvalidConfigurationError(`Uploading your payload would exceed the grant code's maximum total size by ${incomingSize - codeBody.maximumTotalSize} bytes.`));
             } else if (codeBody.maximumFileSize !== undefined && files.some(file => file.size > codeBody.maximumFileSize!)){
-                return Response.json({error: "LIMIT_EXCEEDED", message: `One or more files exceed the grant code's maximum allowed file size of ${codeBody.maximumFileSize} bytes.`}, {status: 400});
+                return errorToResponse(new InvalidConfigurationError(`One or more files exceed the grant code's maximum allowed file size of ${codeBody.maximumFileSize} bytes.`));
             } else if (codeBody.fileCount && files.length != codeBody.fileCount){
-                return Response.json({error: "FILE_COUNT_MISMATCH", message: `This code is meant to upload exactly ${codeBody.fileCount} files. You provided ${files.length}.`}, {status: 400});
+                return errorToResponse(new InvalidConfigurationError(`This code is meant to upload exactly ${codeBody.fileCount} files. You provided ${files.length}.`));
             } else if (codeBody.allowedFileTypes && !files.every(file => codeBody.allowedFileTypes!.includes(file.type))){
-                return Response.json({error: "FILE_TYPE_NOT_ALLOWED", message: `One or more files are not of the allowed types for this grant code. Allowed types: ${codeBody.allowedFileTypes.join(", ")}`}, {status: 400});
+                return errorToResponse(new InvalidConfigurationError(`One or more files are not of the allowed types for this grant code.`));
             }
         }
         let appData: Pick<Application, "id" | "limit"> & { database: { provider: string, id: string, keys: any | undefined, limit: number } | null } | null = null;
@@ -71,14 +71,14 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
             const totalAppSize = (await db.select({ totalSize: sum(filesDb.size) }).from(filesDb).where(eq(filesDb.applicationId, appData.id)))[0]?.totalSize;
             const passedApp = passLimit({incomingSize, currentSize: totalAppSize ? Number(totalAppSize) : 0, limit: appData.limit})
             if (!passedApp.success){
-                return Response.json({error: "LIMIT_EXCEEDED", message: `Uploading your payload would exceed the application's file limit by ${passedApp.exceedsBy} bytes.`, exceedsBy: passedApp.exceedsBy}, {status: 403});
+                return Response.json({error: "LimitExceededError", message: `Uploading your payload would exceed the application's file limit by ${passedApp.exceedsBy} bytes.`, exceedsBy: passedApp.exceedsBy}, {status: 403});
             }
         }
         if (appData.database && appData.database.limit > 0){
             const totalDbSize = (await db.select({ totalSize: sum(filesDb.size) }).from(filesDb).where(eq(filesDb.databaseId, appData.database.id)))[0]?.totalSize;
             const passedDb = passLimit({incomingSize, currentSize: totalDbSize ? Number(totalDbSize) : 0, limit: appData.database.limit})
             if (!passedDb.success){
-                return Response.json({error: "LIMIT_EXCEEDED", message: `Uploading your payload would exceed the database's file limit by ${passedDb.exceedsBy} bytes.`, exceedsBy: passedDb.exceedsBy}, {status: 403});
+                return Response.json({error: "LimitExceededError", message: `Uploading your payload would exceed the database's file limit by ${passedDb.exceedsBy} bytes.`, exceedsBy: passedDb.exceedsBy}, {status: 403});
             }
         }
         if (appData.database?.provider == "hackclub-cdn"){
@@ -154,7 +154,7 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
             return Response.json({uploads: successFiles, failed: failedFiles});
         } else {
             console.log(appData.database?.provider)
-            return errorToResponse(new InvalidConfigurationError("The api key's database provider is not supported for file uploads."));
+            return errorToResponse(new InvalidConfigurationError("The configured database provider is not supported."));
         }
     } catch (error) {
         console.error("Error processing file upload:", error);

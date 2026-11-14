@@ -91,7 +91,7 @@ export const filesColumns = columnHelper.columns([
         return <div className="flex justify-end w-full">
             <RenameFileDialog currentName={row.original.name} fileId={row.original.id} open={openRename} onOpenChange={setOpenRename}/>
             <DeleteFileDialog fileId={row.original.id} open={openDelete} onOpenChange={setOpenDelete}/>
-            <Link href={`/api/files/${row.original.id}`} target="_blank">
+            <Link href={`/api/files/${row.original.id}/view`} target="_blank">
                 <Button variant="ghost" size="icon-sm">
                     <ExternalLink/>
                 </Button>

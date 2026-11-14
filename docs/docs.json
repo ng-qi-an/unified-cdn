@@ -25,6 +25,26 @@
           "dashboard/installation",
           "dashboard/deploying"
         ]
+      },
+      {
+        "group": "API",
+        "pages": [
+          "api/authentication",
+          {
+            "group": "Files",
+            "openapi": {
+              "source": "./openapi.yaml",
+              "slug": "operationId",
+              "directory": "api/files"
+            },
+            "pages": [
+              "GET /files/{id}/view",
+              "GET /files/{id}/get",
+              "DELETE /files/{id}/delete",
+              "POST /files/upload"
+            ] 
+          }
+        ]
       }
     ]
   },
