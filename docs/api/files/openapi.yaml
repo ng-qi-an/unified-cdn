@@ -1,20 +1,24 @@
 openapi: 3.1.0
 info:
-  title: Unified CDN API
-  description: Interact with the Unified CDN system.
+  title: Unified CDN API | Files
+  description: Interact with files on the Unified CDN system.
   version: 0.1.0
 
 servers:
-  - url: https://{{UNIFIED_CDN_DOMAIN}}/api
+  - url: https://{Unified CDN domain}/api
     description: Production server where your Unified CDN is hosted.
-
+    variables:
+      Unified CDN Domain:
+        default: ""
+        description: The domain where your Unified CDN is hosted. Change this to your custom domain if you have one.
 paths:
   /files/{id}/view:
     get:
-      summary: Get file contents
-      description: Retrieves a file's contents by its ID. Use this endpoint to download or display the file in your application. To get a file's details, use [this](/api/files/get-file-data) instead.
+      summary: Get a file's contents
+      description: Retrieves a file's contents by its ID. Use this endpoint to download or display the file in your application. To get a file's details, use [this](/api/files/get-a-files-details) instead.
       parameters:
       - name: id
+        description: ID of the file to retrieve.
         in: path
         required: true
         schema:
@@ -53,10 +57,14 @@ paths:
                     message: "The configured database provider is not supported."                  
   /files/{id}/get:
     get:
-      summary: Get file details
+      security: 
+        - ApiKeyAuth: []
+        - CodeAuth: []
+      summary: Get a file's details
       description: Retrieves a file's details by its ID. Use this endpoint to get file metadata.
       parameters:
       - name: id
+        description: ID of the file to retrieve.
         in: path
         required: true
         schema:
@@ -83,12 +91,80 @@ paths:
                   value:
                     error: "InvalidConfigurationError"
                     message: "The site's timezone is not set."
+  /files/{id}/rename:
+    patch:
+      security: 
+        - ApiKeyAuth: []
+        - CodeAuth: []
+      summary: Rename a file
+      description: Renames a file by its ID.
+      parameters:
+      - name: id
+        description: ID of the file to rename.
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: The new name for the file.
+      responses:
+        "200":
+          description: Successfully renamed the file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newName:
+                    type: string
+                    description: The new name of the file.
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: '#/components/responses/UnauthorisedError'
+        "400":
+          description: Bad request due to invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                timezone_not_set:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The site's timezone is not set."
+                missing_configuration:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The configuration provided is invalid or missing."
+                provider_failed:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Could not connect to database provider. Please check your database key configurations."
+                provider_unsupported:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The configured database provider is not supported."                  
   /files/{id}/delete:
     delete:
+      security: 
+        - ApiKeyAuth: []
+        - CodeAuth: []
       summary: Delete a file
       description: Deletes a file by its ID.
       parameters:
       - name: id
+        description: ID of the file to delete.
         in: path
         required: true
         schema:
@@ -125,7 +201,10 @@ paths:
                     message: "The configured database provider is not supported."                  
   /files/upload:
     post:
-      summary: Upload file(s)
+      security: 
+        - ApiKeyAuth: []
+        - CodeAuth: []
+      summary: Upload files
       description: Upload one or more files to the platform.
       requestBody:
         required: true
@@ -133,11 +212,13 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - files
               properties:
-                appId:
-                  type: string
                 files:
                   type: array
+                  minItems: 1
+                  description: "Array of files to be uploaded."
                   items:
                     type: string
                     format: binary
@@ -151,10 +232,12 @@ paths:
                 properties:
                   uploads:
                     type: array
+                    description: "The list of successfully uploaded files."
                     items:
                       $ref: '#/components/schemas/File'
                   failed:
                     type: array
+                    description: "The list of filenames that failed to upload, along with the reasons."
                     items:
                       type: object
                       properties:
@@ -185,34 +268,37 @@ paths:
                 $ref: '#/components/schemas/Error'
               examples:
                 timezone_not_set:
+                  summary: Site timezone not set
                   value:
                     error: "InvalidConfigurationError"
                     message: "The site's timezone is not set."
-                missing_app_id:
-                  value:
-                    error: "InvalidConfigurationError"
-                    message: "Missing appId in form data."
                 no_files_uploaded:
+                  summary: No files were uploaded
                   value:
                     error: "InvalidConfigurationError"
                     message: "No files were uploaded."
                 max_files_exceeded:
+                  summary: "Max no. of files exceeded"
                   value:
                     error: "InvalidConfigurationError"
                     message: "You can only upload a maximum of ... files at a time."
                 max_file_size_exceeded:
+                  summary: "Max file size exceeded"
                   value:
                     error: "InvalidConfigurationError"
                     message: "One or more files exceed the maximum allowed size of ..."
                 invalid_file_types:
+                  summary: "Invalid file types"
                   value:
                     error: "InvalidConfigurationError"
                     message: "One or more files are not of the allowed types for this grant code."
                 all_files_failed:
+                  summary: "All files failed to upload"
                   value:
                     error: "InvalidConfigurationError"
                     message: "All file uploads failed. Please check your configuration and try again."
                 provider_unsupported:
+                  summary: "Unsupported provider"
                   value:
                     error: "InvalidConfigurationError"
                     message: "The configured database provider is not supported."                  
@@ -233,7 +319,84 @@ paths:
                     error: "LimitExceededError"
                     exceedsBy: 67890
                     message: "Uploading your payload would exceed the database's file limit by ... bytes."
+  /files/delete:
+    delete:
+      security: 
+        - ApiKeyAuth: []
+        - CodeAuth: []
+      summary: Delete files
+      description: Deletes one or more files by their IDs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  minItems: 1
+                  description: "Array of file IDs to be deleted."
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Successfully deleted the file(s).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: array
+                    description: "The list of successfully deleted file IDs."
+                    items:
+                      type: string
+                  failed:
+                    type: array
+                    description: "The list of file IDs that failed to delete, along with the reasons."
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        reason:
+                          type: string
+        "401":
+          $ref: '#/components/responses/UnauthorisedError'
+        "400":
+          description: Bad request due to invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                timezone_not_set:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The site's timezone is not set."
+                provider_failed:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Could not connect to database provider. Please check your database key configurations."
+                provider_unsupported:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The configured database provider is not supported."
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Enter your API key using the format `Bearer <your-api-key>`.
+    CodeAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Enter your code using the format `Code <your-code>`.
   schemas:
     Error:
       type: object

@@ -23,7 +23,7 @@ export const PATCH = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id:
         }
         const file = await db.query.files.findFirst({where: {id}, with: {database: {columns: {provider: true, keys: true}}, applications: {columns: {ownerId: true}}}});
         if (!file){
-            return errorToResponse(new NotFoundError("File not found."));
+            return errorToResponse(new NotFoundError());
         }
         if (apiKey && apiKey.metadata?.appId != file.applicationId){
             return errorToResponse(new UnauthorisedError());
@@ -40,7 +40,7 @@ export const PATCH = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id:
             } catch (error) {
                 if (error instanceof HCDNAuthenticationError){
                     console.log("HCDN authentication error while renaming file. Api key", file.database.keys.apiKey);
-                    return errorToResponse(new UnauthorisedError("Could not connect to database provider. Please check your database key configurations."));
+                    return errorToResponse(new InvalidConfigurationError("Could not connect to database provider. Please check your database key configurations."));
                 }
                 console.error("Error renaming file on HCDN:", error);
                 return errorToResponse(error);

@@ -45,7 +45,7 @@ export const DELETE = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id
             } catch (error) {
                 if (error instanceof HCDNAuthenticationError){
                     console.log("HCDN authentication error while deleting file. Api key", file.database.keys.apiKey);
-                    return errorToResponse(new UnauthorisedError("Could not connect to database provider. Please check your database key configurations."));
+                    return errorToResponse(new InvalidConfigurationError("Could not connect to database provider. Please check your database key configurations."));
                 }
                 console.error("Error deleting file on HCDN:", error);
                 return errorToResponse(error);
@@ -59,7 +59,7 @@ export const DELETE = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id
                 }));
             } catch (error) {
                 if (isCredentialError(error)){
-                    return errorToResponse(new UnauthorisedError("Could not connect to database provider. Please check your database key configurations."));
+                    return errorToResponse(new InvalidConfigurationError("Could not connect to database provider. Please check your database key configurations."));
                 }
                 console.error("Error deleting file on S3:", error);
                 return errorToResponse(error);

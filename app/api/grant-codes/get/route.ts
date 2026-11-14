@@ -9,7 +9,7 @@ export const GET = async(req: Request) => {
             return errorToResponse(new UnauthorisedError("Missing code in Authorization header."));
         }
         const codeData = await getGrantCode(code)
-        return Response.json(codeData, {status: 200});
+        return Response.json({...codeData}, {status: 200});
     } catch (error) {
         return errorToResponse(error);
     }

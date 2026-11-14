@@ -103,7 +103,7 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
                 return Response.json({uploads: normalisedUploads, failed});
             } catch (error) {
                 if (error instanceof HCDNAuthenticationError){
-                    return errorToResponse(new UnauthorisedError("Could not connect to database provider. Please check your database key configurations."));
+                    return errorToResponse(new InvalidConfigurationError("Could not connect to database provider. Please check your database key configurations."));
                 } else {
                     console.error("Error uploading files to HCDN:", error);
                     return errorToResponse(error);

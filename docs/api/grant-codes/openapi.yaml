@@ -1,0 +1,249 @@
+openapi: 3.1.0
+info:
+  title: Unified CDN API | Grant codes
+  description: Interact with grant codes in the Unified CDN system.
+  version: 0.1.0
+
+servers:
+  - url: https://{Unified_CDN_domain}/api
+    description: Production server where your Unified CDN is hosted.
+    variables:
+      Unified_CDN_domain:
+        default: "api.example.com"
+        description: The domain where your Unified CDN is hosted. Change this to your custom domain if you have one.
+paths:
+  /grant-codes/generate:
+    post:
+      summary: Generate grant code
+      description: Generate a new grant code for a specific action. The grant code can be used to perform the specified action from the client.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/UploadFilesGrantCodeRequest'
+                - $ref: '#/components/schemas/DeleteFilesGrantCodeRequest'
+              discriminator:
+                propertyName: action
+                mapping:
+                  UPLOAD_FILES: '#/components/schemas/UploadFilesGrantCodeRequest'
+                  DELETE_FILES: '#/components/schemas/DeleteFilesGrantCodeRequest'
+      responses:
+        '200':
+          description: Grant code generated successfully.
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: The generated grant code.
+        '400':
+          description: Bad request due to invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingFields:
+                  summary: "Missing fields"
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Missing action or data in request body."
+                invalidAction:
+                  summary: "Invalid action"
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Invalid action in request body. Must be one of: [...]"
+        '401':
+          $ref: '#/components/responses/UnauthorisedError'
+  /grant-codes/get:
+    get:
+      summary: Get grant code details
+      description: Retrieve details of a specific grant code.
+      security:
+        - CodeAuth: []
+      responses:
+        '200':
+          description: Grant code details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Code'
+        '401':
+          description: Unauthorized access due to missing or invalid grant code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingCode:
+                  summary: "Missing code"
+                  value:
+                    error: "UnauthorisedError"
+                    message: "Missing code in Authorization header."
+                invalidCode:
+                  summary: "Invalid code"
+                  value:
+                    error: "UnauthorisedError"
+                    message: "The grant code is invalid or has expired."
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Enter your API key using the format `Bearer <your-api-key>`.
+    CodeAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Enter your code using the format `Code <your-code>`.
+  schemas:
+    GrantCodeRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          description: Action which the grant code is allowed to execute. [Do not change this!]
+        expiresIn:
+          type: integer
+          minimum: 1
+          description: Duration in seconds for which the grant code is valid. Defaults to 300 seconds (5 minutes).
+    UploadFilesGrantCodeRequest:
+      title: Upload files
+      allOf:
+        - $ref: '#/components/schemas/GrantCodeRequest'
+        - type : object
+          required:
+            - action
+            - data
+          properties:
+            action:
+              type: string
+              const: UPLOAD_FILES
+              default: UPLOAD_FILES
+            data:
+              type: object
+              required:
+                - fileCount
+              properties:
+                fileCount: 
+                  type: integer
+                  description: "Number of files the code is allowed to upload. The code must upload exactly this number, or the request will fail."
+                maximumFileSize: 
+                  description: "Maximum size in bytes for each file the code is allowed to upload. Defaults to unlimited, or the application's limit."
+                  type: integer
+                maximumTotalSize: 
+                  description: "Maximum total size in bytes for all files the code is allowed to upload. Defaults to unlimited, or the application's limit."
+                  type: integer
+                allowedFileTypes: 
+                  type: array
+                  description: "Array of allowed MIME types for the files the code is allowed to upload. If not specified, all file types are allowed."
+                  items:
+                    type: string
+    DeleteFilesGrantCodeRequest:
+      title: Delete files
+      allOf:
+        - $ref: '#/components/schemas/GrantCodeRequest'
+        - type : object
+          required:
+            - action
+            - data
+          properties:
+            action:
+              type: string
+              const: DELETE_FILES
+              default: DELETE_FILES
+            data:
+              type: object
+              required:
+                - fileIds
+              properties:
+                fileIds: 
+                  type: array
+                  description: "Array of file IDs you want the code to be allowed to delete."
+                  items:
+                    type: string
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+    Code:
+      type: object
+      properties:
+        code:
+          description: The grant code.
+          type: string
+        action:
+          description: Action the code is restricted to.
+          type: string
+        data:
+          description: Additional data passed when generating the code.
+          type: object
+        applicationId:
+          description: ID of the application that this code is for.
+          type: string
+        apiKeyId:
+          description: ID of the API key that generated and owns this code.
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - code
+        - action
+        - data
+        - applicationId
+        - apiKeyId
+        - expiresAt
+        - createdAt
+  responses:
+    NotFound:
+      description: The specified resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            notFound:
+              value:
+                error: "NotFoundError"
+                message: "The requested resource was not found."
+    UnauthorisedError:
+      description: The request lacks valid authentication credentials.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            unauthorised:
+              value:
+                error: "UnauthorisedError"
+                message: "You are unauthorised to perform this action."
+    InvalidConfigurationError:
+      description: The request is invalid due to misconfiguration.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalidConfig:
+              value:
+                error: "InvalidConfigurationError"
+                message: "The configuration provided is invalid or missing."

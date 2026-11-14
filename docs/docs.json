@@ -33,15 +33,27 @@
           {
             "group": "Files",
             "openapi": {
-              "source": "./openapi.yaml",
-              "slug": "operationId",
+              "source": "./api/files/openapi.yaml",
               "directory": "api/files"
             },
             "pages": [
               "GET /files/{id}/view",
               "GET /files/{id}/get",
+              "PATCH /files/{id}/rename",
               "DELETE /files/{id}/delete",
-              "POST /files/upload"
+              "POST /files/upload",
+              "DELETE /files/delete"
+            ] 
+          },
+          {
+            "group": "Grant codes",
+            "openapi": {
+              "source": "./api/grant-codes/openapi.yaml",
+              "directory": "api/grant-codes"
+            },
+            "pages": [
+              "POST /grant-codes/generate",
+              "GET /grant-codes/get"
             ] 
           }
         ]

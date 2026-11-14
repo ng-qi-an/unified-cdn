@@ -25,7 +25,7 @@ export async function deleteFiles({filesFromDb, keys, provider}: {filesFromDb: {
             return {deleted: deletedFiles, failed: failedFiles};
         } catch (error) {
             if (error instanceof HCDNAuthenticationError){
-                throw new UnauthorisedError("Could not connect to database provider. Please check your database key configurations.");
+                throw new InvalidConfigurationError("Could not connect to database provider. Please check your database key configurations.");
             } else {
                 console.error("Error deleting files to HCDN:", error);
                 throw error;
@@ -50,7 +50,7 @@ export async function deleteFiles({filesFromDb, keys, provider}: {filesFromDb: {
         } catch (error) {
             console.log("Error deleting file to S3:", error);
             if (isCredentialError(error)){
-                throw new UnauthorisedError("Could not connect to database provider. Please check your database key configurations.");
+                throw new InvalidConfigurationError("Could not connect to database provider. Please check your database key configurations.");
             } else {
                 console.error("Error deleting files on S3:", error);
                 throw error;
@@ -58,6 +58,6 @@ export async function deleteFiles({filesFromDb, keys, provider}: {filesFromDb: {
         }
     } else {
         console.log(provider)
-        throw new InvalidConfigurationError("The api key's database provider is not supported for file uploads.");
+        throw new InvalidConfigurationError("The configured database provider is not supported.");
     }
 }

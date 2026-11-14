@@ -11,6 +11,6 @@ export const POST = verifyAPIKey(async(req, ctx, apiKey) => {
     if (!grantCodeActionKeys.includes(body.action)){
         return errorToResponse(new InvalidConfigurationError(`Invalid action in request body. Must be one of: ${grantCodeActionKeys.join(", ")}`));
     }
-    const newCode = await generateGrantCode({action: body.action, data: body.data, apiKeyId: apiKey.id, applicationId: apiKey.metadata?.appId});
-    return Response.json(newCode, {status: 200});
+    const newCode = await generateGrantCode({action: body.action, data: body.data, apiKeyId: apiKey.id, applicationId: apiKey.metadata?.appId, expiresIn: body.expiresAt || undefined});
+    return Response.json({code: newCode}, {status: 200});
 })

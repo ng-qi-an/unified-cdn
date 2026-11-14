@@ -9,7 +9,8 @@
     "build": "next build",
     "start": "next start",
     "sync-auth": "npx auth generate --output ./lib/schema/auth-schema.ts && npx drizzle-kit push",
-    "lint": "eslint"
+    "lint": "eslint",
+    "docs": "cd docs && mint dev --port 3333 --no-open"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1149.0",
