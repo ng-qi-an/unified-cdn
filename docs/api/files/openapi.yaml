@@ -5,11 +5,11 @@ info:
   version: 0.1.0
 
 servers:
-  - url: https://{Unified CDN domain}/api
+  - url: https://{Unified_CDN_domain}/api
     description: Production server where your Unified CDN is hosted.
     variables:
-      Unified CDN Domain:
-        default: ""
+      Unified_CDN_domain:
+        default: "api.example.com"
         description: The domain where your Unified CDN is hosted. Change this to your custom domain if you have one.
 paths:
   /files/{id}/view:
