@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "next telementry disable",
     "build": "next build",
     "start": "next start",
     "sync-auth": "npx auth generate --output ./lib/schema/auth-schema.ts && npx drizzle-kit push",
