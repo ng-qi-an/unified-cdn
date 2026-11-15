@@ -25,8 +25,7 @@ paths:
           type: string
       responses:
         "200":
-          description: >
-            Successfully retrieved the file. 
+          description: Successfully retrieved the file. 
           content:
             application/octet-stream:
               schema:

@@ -91,6 +91,40 @@ paths:
                   value:
                     error: "UnauthorisedError"
                     message: "The grant code is invalid or has expired."
+  /grant-codes/delete:
+    delete:
+      summary: Delete grant code
+      description: Delete a specific grant code.
+      security:
+        - CodeAuth: []
+      responses:
+        '200':
+          description: Grant code deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    const: "OK"
+        '401':
+          description: Unauthorized access due to missing or invalid grant code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingCode:
+                  summary: "Missing code"
+                  value:
+                    error: "UnauthorisedError"
+                    message: "Missing code in Authorization header."
+                invalidCode:
+                  summary: "Invalid code"
+                  value:
+                    error: "UnauthorisedError"
+                    message: "The grant code is invalid or has expired."
 components:
   securitySchemes:
     ApiKeyAuth:

@@ -2,3 +2,195 @@
 title: Authentication
 description: Connect your application to Unified CDN
 ---
+Authentication is required for most routes in the API. There are two main ways to authenticate, using an [API Key](#api-key) or using the [Grant Code](#grant-code) system.
+## API Key
+An API Key is a **secret token** that is tied to an application on Unified CDN, allowing your websites or mobile apps to take actions on **behalf of you**. 
+
+<Columns cols="2">
+    <Column>
+        **What API keys can do**
+        - Upload files, get files, rename files, etc
+        - **Do not** require your username or password to be stored in your application
+        - Can be easily **revoked** if compromised
+        - Be used securely on a web server
+    </Column>
+    <Column>
+        **What API keys cannot do**
+        - Access your account directly
+        - Manage your application/database details on Unified CDN
+        - Be used securely on the client-side of your application
+    </Column>
+</Columns>
+
+For example, you could use an API key on **your website's backend**, allowing your website to **upload files** to Unified CDN through your backend without needing your username or password.
+<Warning>
+API Keys are considered **sensitive information**. You should ***only*** use them on a server, and ***never*** on the client side of your application. 
+
+If you need to interact with API routes from the client, check [Grant Codes](#grant-code) for a more secure way.
+</Warning>
+### Making your first request
+For this example, we'll try getting the metadata of a file you've uploaded to Unified CDN.
+<Steps>
+    <Step title="Uploading a sample file">
+        First, upload a sample file using the dashboard, or  use a pre-existing file on your Application. Make sure to copy the file ID first.
+    </Step>
+    <Step title="Obtain an API key">
+        Next, obtain a key from your Unified CDN dashboard. See [here](/dashboard/applications) for more information. API keys are only shown once, so remember to copy them!
+    </Step>
+    <Step title="Setting up your request">
+        Unified CDN uses the Bearer authentication scheme. This means you need to include your API key in the `Authorization` header of your request, prefixed with "Bearer" like so:
+        ```http
+        GET /some/endpoint HTTP/1.1
+        Host: <your-unified-cdn-domain>
+        Authorization: Bearer <your-api-key>
+        ```
+        For this example, we want to get a file's data, so we'll use the `/api/files/{id}/get` route. Run the following code in your terminal or your application:
+        <CodeGroup dropdown>
+            ```bash Terminal
+            curl --request GET \
+                --url https://<your-unified-cdn-domain/api/files/<your-file-id>/get \
+                --header 'Authorization: Bearer <your-api-key>'
+            ```
+            ```javascript index.js
+            fetch("https://<your-unified-cdn-domain/api/files/<your-file-id>/get", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer <your-api-key>"
+                }
+            })
+            .then((response) => response.json())
+            .then((data)=> console.log(data))
+            .catch((error) => console.error(error));
+            ```
+        </CodeGroup>
+        You should see your file's metadata printed on your console!
+    </Step>
+    <Step title="Next steps">
+        Now that you know how to authenticate with an API key, you can use it to **make requests** to any of the **other routes** in the API. 
+        
+        To verify if a route supports API keys, check the **Authorizations** section of each API route's page.
+    </Step>
+</Steps>
+
+## Grant code
+Grant codes are a more secure way to authenticate with Unified CDN from the **client-side** of your application. They are tied to and work similarly to API keys, but are short-lived and temporary.
+<Columns cols="2">
+    <Column>
+        **What grant codes can do**
+        - A singular action, such as uploading files, getting files, renaming files, etc.
+        - Do not reveal your API key on the client
+        - Automatically expire after a short period of time
+        - Can be set with safeguards to validate client requests (like file types to upload, etc)
+    </Column>
+    <Column>
+        **What grant codes cannot do**
+        - Take more than 1 action (like uploading a file and then deleting it)
+        - Be used more than 1 time
+        - Be used to access your account directly
+        - Be used to manage your application/database details on Unified CDN
+        - Generate other grant codes
+    </Column>
+</Columns>
+
+As grant codes are intended to be used **directly from the browser**, they are more **restrictive** by nature. Grant codes can only be generated from your **server** with an API key, and must be set with certain variables to prevent abuse.
+
+For example, when **uploading files**, grant codes must be created with a **fixed file number** so users don't upload more or less than the **intended amount**. Grant codes can also be set with **file types** when uploading, so users cannot upload files that **are not allowed**.
+<Info>
+Grant codes are especially useful when using **serverless platforms** like Vercel. Vercel has a max payload size ([see here](https://vercel.com/docs/functions/limitations#request-body-size)) that makes uploading files to Unified CDN through your app's api routes impossible.
+
+By using grant codes, you can first generate a grant code on your server, then pass it to the client components to upload files directly to Unified CDN without needing to go through Vercel.
+</Info>
+### Making your first request (with grant codes!)
+For this example, we will be **uploading** a single file to Unified CDN from the **client-side of your application**.
+<Steps>
+    <Step title="Obtain an API key">
+        Firstly, Grant codes are tied to and **require an API key**, inheriting any permissions you set on your key.
+
+        Obtain a key that can **upload files** from your Unified CDN dashboard. You should have read the [API Key](#api-key) section above to understand how to obtain and use it.
+    </Step>
+    <Step title="Generating a grant code">
+        Next, you need to generate a grant code from your **server**. Grant codes are generated through the `/api/grant-codes/generate` route, which requires an API key in the `Authorization` header.
+
+        For this example, we will generate a grant code that allows **uploading 1 file** of type **image/png**. Run the following code on your server:
+        <CodeGroup dropdown>
+            ```bash Terminal
+            curl --request POST \
+                --url https://<your-unified-cdn-domain/api/grant-codes/generate \
+                --header 'Authorization: Bearer <your-api-key>' \
+                --header 'Content-Type: application/json' \
+                --data '{
+                    "action": "UPLOAD_FILES",
+                    "data": {
+                        "fileCount": 1,
+                        "allowedFileTypes": ["image/png"]
+                    }
+                }'
+            ```
+            ```javascript index.js
+            fetch("https://<your-unified-cdn-domain/api/grant-codes/generate", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer <your-api-key>",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    action: "UPLOAD_FILES",
+                    data: {
+                        fileCount: 1,
+                        allowedFileTypes: ["image/png"]
+                    }
+                })
+            })
+            .then((response) => response.json())
+            .then((data)=> console.log(data))
+            .catch((error) => console.error(error));
+            ```
+        </CodeGroup>
+        You should see a JSON response with your **grant code** printed on your console! Make sure to copy the code, you need it later.
+
+        From the example, we set the **guidelines** for our grant code in the `data` field. Each action has **different** required and supported parameters. For more configuration options, see [here](/api/grant-codes/generate-grant-code).
+    </Step>
+    <Step title="Upload the file">
+        Grant codes uses the Code authentication scheme. This means you need to include your grant code in the `Authorization` header of your request, prefixed with "Code" like so:       
+        ```http
+        GET /some/endpoint HTTP/1.1
+        Host: <your-unified-cdn-domain>
+        Authorization: Code <your-api-key>
+        ```
+
+        Now that you have your grant code, you can use it to upload a file directly to Unified CDN from the **client-side** of your application. 
+        
+        For this example, we will upload a single PNG file using the `/api/files/upload` route. Run the following code from your client:
+        <CodeGroup dropdown>
+            ```bash Terminal
+            curl --request POST \
+                --url https://<your-unified-cdn-domain/api/files/upload \
+                --header 'Authorization: Code <your-grant-code>' \
+                --form 'files=@"/path/to/your/file.png"'
+            ```
+            ```javascript index.js
+            const formData = new FormData();
+            formData.append("files", fileInput.files[0]); // Assuming you have a file input element
+
+            fetch("https://<your-unified-cdn-domain/api/files/upload", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Code <your-grant-code>"
+                },
+                body: formData
+            })
+            .then((response) => response.json())
+            .then((data)=> console.log(data))
+            .catch((error) => console.error(error));
+            ```
+        </CodeGroup>
+        You should see a JSON response with your uploaded file's metadata printed on your console!
+    </Step>
+    <Step title="Next steps">
+        Check if the file has been uploaded by navigating to the `Files` tab on your Application.
+
+        Now that you know how to authenticate with a grant code, you can use it to **make requests** to any of the **other routes** in the API. 
+        
+        To verify if a route supports grant codes, check the **Authorizations** section of each API route's page.
+    </Step>
+</Steps>

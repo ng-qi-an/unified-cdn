@@ -53,7 +53,8 @@
             },
             "pages": [
               "POST /grant-codes/generate",
-              "GET /grant-codes/get"
+              "GET /grant-codes/get",
+              "DELETE /grant-codes/delete"
             ] 
           }
         ]
