@@ -24,13 +24,21 @@ paths:
           application/json:
             schema:
               oneOf:
+                - $ref: '#/components/schemas/GetFilesGrantCodeRequest'
                 - $ref: '#/components/schemas/UploadFilesGrantCodeRequest'
                 - $ref: '#/components/schemas/DeleteFilesGrantCodeRequest'
+                - $ref: '#/components/schemas/GetFileGrantCodeRequest'
+                - $ref: '#/components/schemas/RenameFileGrantCodeRequest'
+                - $ref: '#/components/schemas/DeleteFileGrantCodeRequest'
               discriminator:
                 propertyName: action
                 mapping:
+                  GET_FILES: '#/components/schemas/GetFilesGrantCodeRequest'
                   UPLOAD_FILES: '#/components/schemas/UploadFilesGrantCodeRequest'
                   DELETE_FILES: '#/components/schemas/DeleteFilesGrantCodeRequest'
+                  GET_FILE: '#/components/schemas/GetFileGrantCodeRequest'
+                  RENAME_FILE: '#/components/schemas/RenameFileGrantCodeRequest'
+                  DELETE_FILE: '#/components/schemas/DeleteFileGrantCodeRequest'
       responses:
         '200':
           description: Grant code generated successfully.
@@ -205,6 +213,97 @@ components:
                   description: "Array of file IDs you want the code to be allowed to delete."
                   items:
                     type: string
+    GetFilesGrantCodeRequest:
+      title: Get files
+      allOf:
+        - $ref: '#/components/schemas/GrantCodeRequest'
+        - type : object
+          required:
+            - action
+            - data
+          properties:
+            action:
+              type: string
+              const: GET_FILES
+              default: GET_FILES
+            data:
+              type: object
+              required:
+                - fileIds
+              properties:
+                fileIds: 
+                  type: array
+                  description: "Array of file IDs you want the code to be allowed to get."
+                  items:
+                    type: string
+    RenameFileGrantCodeRequest:
+      title: Rename a file
+      allOf:
+        - $ref: '#/components/schemas/GrantCodeRequest'
+        - type : object
+          required:
+            - action
+            - data
+          properties:
+            action:
+              type: string
+              const: RENAME_FILE
+              default: RENAME_FILE
+            data:
+              type: object
+              required:
+                - fileId
+                - newName
+              properties:
+                fileIds: 
+                  type: string
+                  description: "File ID you want the code to be allowed to rename."
+                newName:
+                  type: string
+                  description: "New name for the file."
+    GetFileGrantCodeRequest:
+      title: Get a file
+      allOf:
+        - $ref: '#/components/schemas/GrantCodeRequest'
+        - type : object
+          required:
+            - action
+            - data
+          properties:
+            action:
+              type: string
+              const: GET_FILE
+              default: GET_FILE
+            data:
+              type: object
+              required:
+                - fileId
+              properties:
+                fileIds: 
+                  type: string
+                  description: "File ID you want the code to be allowed to get."
+    DeleteFileGrantCodeRequest:
+      title: Delete a file
+      allOf:
+        - $ref: '#/components/schemas/GrantCodeRequest'
+        - type : object
+          required:
+            - action
+            - data
+          properties:
+            action:
+              type: string
+              const: DELETE_FILE
+              default: DELETE_FILE
+            data:
+              type: object
+              required:
+                - fileId
+              properties:
+                fileIds: 
+                  type: string
+                  description: "File ID you want the code to be allowed to delete."
+       
     Error:
       type: object
       required:

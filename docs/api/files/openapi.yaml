@@ -90,6 +90,11 @@ paths:
                   value:
                     error: "InvalidConfigurationError"
                     message: "The site's timezone is not set."
+                invalid_code_data:
+                  summary: Invalid code data
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The grant code does not have the required data."
   /files/{id}/rename:
     patch:
       security: 
@@ -154,6 +159,11 @@ paths:
                   value:
                     error: "InvalidConfigurationError"
                     message: "The configured database provider is not supported."                  
+                invalid_code_data:
+                  summary: Invalid code data
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The grant code does not have the required data."
   /files/{id}/delete:
     delete:
       security: 
@@ -198,6 +208,12 @@ paths:
                   value:
                     error: "InvalidConfigurationError"
                     message: "The configured database provider is not supported."                  
+                invalid_code_data:
+                  summary: Invalid code data
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The grant code does not have the required data."
+
   /files/upload:
     post:
       security: 
@@ -245,20 +261,7 @@ paths:
                         reason:
                           type: string
         "401":
-          description: The request lacks valid authentication credentials.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                unauthorised:
-                  value:
-                    error: "UnauthorisedError"
-                    message: "You are unauthorised to perform this action."
-                provider_failed:
-                  value:
-                    error: "InvalidConfigurationError"
-                    message: "Could not connect to database provider. Please check your database key configurations."
+          $ref: '#/components/responses/UnauthorisedError'
         "400":
           description: Bad request due to invalid configuration
           content:
@@ -276,6 +279,11 @@ paths:
                   value:
                     error: "InvalidConfigurationError"
                     message: "No files were uploaded."
+                invalid_code_data:
+                  summary: Invalid code data
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The grant code does not have the required data."
                 max_files_exceeded:
                   summary: "Max no. of files exceeded"
                   value:
@@ -296,6 +304,10 @@ paths:
                   value:
                     error: "InvalidConfigurationError"
                     message: "All file uploads failed. Please check your configuration and try again."
+                provider_failed:
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "Could not connect to database provider. Please check your database key configurations."
                 provider_unsupported:
                   summary: "Unsupported provider"
                   value:
@@ -318,6 +330,66 @@ paths:
                     error: "LimitExceededError"
                     exceedsBy: 67890
                     message: "Uploading your payload would exceed the database's file limit by ... bytes."
+  /files/get:
+    get:
+      security: 
+        - ApiKeyAuth: []
+        - CodeAuth: []
+      summary: Get files
+      description: Retrieve details for one or more files.
+      parameters:
+        - name: ids
+          in: query
+          description: Comma-separated list of file IDs to retrieve details for.
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+      responses:
+        "200":
+          description: Successfully retrieved the files.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    description: "The list of successfully retrieved files."
+                    items:
+                      $ref: '#/components/schemas/File'
+        "401":
+          $ref: '#/components/responses/UnauthorisedError'
+
+        "400":
+          description: Bad request due to invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                timezone_not_set:
+                  summary: Site timezone not set
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The site's timezone is not set."
+                missing__files_ids:
+                  summary: Missing file IDs
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "No file IDs were provided in the request."
+                no_files_found:
+                  summary: No files were found
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "No files were found."
+                invalid_code_data:
+                  summary: Invalid code data
+                  value:
+                    error: "InvalidConfigurationError"
+                    message: "The grant code does not have the required data."
   /files/delete:
     delete:
       security: 

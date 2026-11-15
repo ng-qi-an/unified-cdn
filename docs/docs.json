@@ -37,12 +37,13 @@
               "directory": "api/files"
             },
             "pages": [
+              "GET /files/get",
+              "POST /files/upload",
+              "DELETE /files/delete",
               "GET /files/{id}/view",
               "GET /files/{id}/get",
               "PATCH /files/{id}/rename",
-              "DELETE /files/{id}/delete",
-              "POST /files/upload",
-              "DELETE /files/delete"
+              "DELETE /files/{id}/delete"
             ] 
           },
           {

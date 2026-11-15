@@ -30,7 +30,10 @@ export const GET = verifyAPIKeyOrCodeOrUser("GET_FILES", async (req, ctx, apiKey
     if (!appData){
         return errorToResponse(new UnauthorisedError());
     }
-    const fileIds = req.nextUrl.searchParams.getAll("id");
+    const fileIds = req.nextUrl.searchParams.get("ids")?.split(", ") ?? [];
+    if (fileIds.length === 0){
+        return errorToResponse(new InvalidConfigurationError("No file IDs were provided in the request."));
+    }
     const files = await db.select().from(filesDb).where(and(eq(filesDb.applicationId, appData.id), inArray(filesDb.id, fileIds)));
     if (files.length === 0){
         return errorToResponse(new InvalidConfigurationError("No files found for the provided ids."));
