@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, UnauthorisedError } from "@/lib/errors";
-import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrUser } from "@/lib/permissions/serverPermissionHelpers";
+import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrCodeOrUser } from "@/lib/permissions/serverPermissionHelpers";
 import { files as filesDb } from "@/lib/schema/schema";
 import { Application } from "@/lib/schema/schemaTypes";
 import { and, eq, inArray } from "drizzle-orm";
@@ -11,14 +11,25 @@ import updateSizeAnalyticsEvent from "@/lib/actions/analytics/updateSizeAnalytic
 import updateFilesAnalyticsEvent from "@/lib/actions/analytics/updateFilesAnalyticsEvent";
 import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequestsAnalyticsEvent";
 import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
+import { GrantCodeActions } from "@/lib/actions/files/grant-codes/grantCodeActions";
 
 
-export const DELETE = verifyAPIKeyOrUser(async (req, ctx, apiKey, user) => {
+export const DELETE = verifyAPIKeyOrCodeOrUser("DELETE_FILES", async (req, ctx, apiKey, user, code) => {
     const siteConfig = await getSiteConfig();
     if (!siteConfig.general.timezone){
         return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
     }
     try {
+        if (code){
+            const codeBody = code.data as GrantCodeActions["DELETE_FILES"];
+            if (!codeBody || !codeBody.fileIds || !Array.isArray(codeBody.fileIds) || codeBody.fileIds.length === 0){
+                return errorToResponse(new InvalidConfigurationError("The grant code does not have the required data."));
+            } else {
+                if (JSON.stringify(codeBody.fileIds.toSorted()) !== JSON.stringify((await req.json()).files.toSorted())){
+                    return errorToResponse(new InvalidConfigurationError("The files provided do not match the files allowed by the grant code."));
+                }
+            }
+        }
         const data = await req.json();
         if (!Array.isArray(data.files) || data.files.length === 0) {
             return errorToResponse(new InvalidConfigurationError());

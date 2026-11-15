@@ -1,12 +1,13 @@
 import updateFilesAnalyticsEvent from "@/lib/actions/analytics/updateFilesAnalyticsEvent";
 import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequestsAnalyticsEvent";
 import updateSizeAnalyticsEvent from "@/lib/actions/analytics/updateSizeAnalyticsEvent";
+import { GrantCodeActions } from "@/lib/actions/files/grant-codes/grantCodeActions";
 import { makeAppLog } from "@/lib/actions/logs/appLog";
 import { makeDbLog } from "@/lib/actions/logs/dbLog";
 import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, NotFoundError, UnauthorisedError } from "@/lib/errors";
-import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrUser } from "@/lib/permissions/serverPermissionHelpers";
+import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrCodeOrUser, verifyAPIKeyOrUser } from "@/lib/permissions/serverPermissionHelpers";
 import { HCDNClient } from "@/lib/providers/hcdn/client";
 import { HCDNAuthenticationError } from "@/lib/providers/hcdn/errors";
 import { getS3Client } from "@/lib/providers/s3/getClient";
@@ -15,7 +16,7 @@ import { files } from "@/lib/schema/schema";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { eq } from "drizzle-orm";
 
-export const DELETE = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id: string }> }, apiKey, user) => {
+export const DELETE = verifyAPIKeyOrCodeOrUser("DELETE_FILE", async (req, ctx: { params: Promise<{ id: string }> }, apiKey, user, code) => {
     const siteConfig = await getSiteConfig();
     if (!siteConfig.general.timezone){
         return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
@@ -24,6 +25,16 @@ export const DELETE = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id
         const { id } = await ctx.params;
         if (!id){
             return errorToResponse(new InvalidConfigurationError());
+        }
+        if (code){
+            const codeBody = code.data as GrantCodeActions["DELETE_FILE"];
+            if (!codeBody || !codeBody.fileId){
+                return errorToResponse(new InvalidConfigurationError("The grant code does not have the required data."));
+            } else {
+                if (codeBody.fileId !== id){
+                    return errorToResponse(new InvalidConfigurationError("The file provided does not match the file allowed by the grant code."));
+                }
+            }
         }
         const file = await db.query.files.findFirst({where: {id}, with: {database: {columns: {provider: true, keys: true}}, applications: {columns: {ownerId: true}}}});
         if (!file){

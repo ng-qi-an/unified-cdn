@@ -1,16 +1,17 @@
 import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequestsAnalyticsEvent";
+import { GrantCodeActions } from "@/lib/actions/files/grant-codes/grantCodeActions";
 import { makeAppLog } from "@/lib/actions/logs/appLog";
 import { makeDbLog } from "@/lib/actions/logs/dbLog";
 import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, NotFoundError, UnauthorisedError } from "@/lib/errors";
-import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrUser } from "@/lib/permissions/serverPermissionHelpers";
+import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrCodeOrUser, verifyAPIKeyOrUser } from "@/lib/permissions/serverPermissionHelpers";
 import { HCDNClient } from "@/lib/providers/hcdn/client";
 import { HCDNAuthenticationError } from "@/lib/providers/hcdn/errors";
 import { files } from "@/lib/schema/schema";
 import { eq } from "drizzle-orm";
 
-export const PATCH = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id: string }> }, apiKey, user) => {
+export const PATCH = verifyAPIKeyOrCodeOrUser("RENAME_FILE", async (req, ctx: { params: Promise<{ id: string }> }, apiKey, user, code) => {
     const siteConfig = await getSiteConfig();
     if (!siteConfig.general.timezone){
         return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
@@ -18,8 +19,18 @@ export const PATCH = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id:
     try {
         const data = await req.json();
         const { id } = await ctx.params;
-        if (!data || !data.name || !id){
+        if (!data || !data.name.trim() || !id){
             return errorToResponse(new InvalidConfigurationError());
+        }
+        if (code){
+            const codeBody = code.data as GrantCodeActions["RENAME_FILE"];
+            if (!codeBody || !codeBody.fileId || !codeBody.newFileName.trim()){
+                return errorToResponse(new InvalidConfigurationError("The grant code does not have the required data."));
+            } else {
+                if (codeBody.fileId !== id){
+                    return errorToResponse(new InvalidConfigurationError("The file provided does not match the file allowed by the grant code."));
+                }
+            }
         }
         const file = await db.query.files.findFirst({where: {id}, with: {database: {columns: {provider: true, keys: true}}, applications: {columns: {ownerId: true}}}});
         if (!file){

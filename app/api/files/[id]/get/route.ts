@@ -1,16 +1,27 @@
 import updateRequestsAnalyticsEvent from "@/lib/actions/analytics/updateRequestsAnalyticsEvent";
+import { GrantCodeActions } from "@/lib/actions/files/grant-codes/grantCodeActions";
 import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 import { db } from "@/lib/db";
 import { InvalidConfigurationError, NotFoundError, UnauthorisedError } from "@/lib/errors";
-import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrUser } from "@/lib/permissions/serverPermissionHelpers";
+import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrCodeOrUser } from "@/lib/permissions/serverPermissionHelpers";
 
-export const GET = verifyAPIKeyOrUser(async (req, ctx: { params: Promise<{ id: string }> }, apiKey, user) => {
+export const GET = verifyAPIKeyOrCodeOrUser("GET_FILE", async (req, ctx: { params: Promise<{ id: string }> }, apiKey, user, code) => {
     const { id } = await ctx.params;
-    const file = await db.query.files.findFirst({where: {id}, with: {applications: {columns: {ownerId: true}}}});
     const siteConfig = await getSiteConfig();
     if (!siteConfig.general.timezone){
         return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
     }
+    if (code){
+        const codeBody = code.data as GrantCodeActions["GET_FILE"];
+        if (!codeBody || !codeBody.fileId){
+            return errorToResponse(new InvalidConfigurationError("The grant code does not have the required data."));
+        } else {
+            if (codeBody.fileId !== id){
+                return errorToResponse(new InvalidConfigurationError("The file provided does not match the file allowed by the grant code."));
+            }
+        }
+    }
+    const file = await db.query.files.findFirst({where: {id}, with: {applications: {columns: {ownerId: true}}}});
     if (!file){
         return errorToResponse(new NotFoundError());
     }

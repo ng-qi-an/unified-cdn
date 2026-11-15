@@ -44,11 +44,13 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
         const incomingSize = files.reduce((acc, file) => acc + file.size, 0);
         if (code){
             const codeBody = code.data as GrantCodeActions["UPLOAD_FILES"];
-            if (codeBody.maximumTotalSize && incomingSize > codeBody.maximumTotalSize){
+            if (!codeBody || !codeBody.fileCount){
+                return errorToResponse(new InvalidConfigurationError("The grant code does not have the required data."));
+            } else if (codeBody.maximumTotalSize && incomingSize > codeBody.maximumTotalSize){
                 return errorToResponse(new InvalidConfigurationError(`Uploading your payload would exceed the grant code's maximum total size by ${incomingSize - codeBody.maximumTotalSize} bytes.`));
             } else if (codeBody.maximumFileSize !== undefined && files.some(file => file.size > codeBody.maximumFileSize!)){
                 return errorToResponse(new InvalidConfigurationError(`One or more files exceed the grant code's maximum allowed file size of ${codeBody.maximumFileSize} bytes.`));
-            } else if (codeBody.fileCount && files.length != codeBody.fileCount){
+            } else if (files.length != codeBody.fileCount){
                 return errorToResponse(new InvalidConfigurationError(`This code is meant to upload exactly ${codeBody.fileCount} files. You provided ${files.length}.`));
             } else if (codeBody.allowedFileTypes && !files.every(file => codeBody.allowedFileTypes!.includes(file.type))){
                 return errorToResponse(new InvalidConfigurationError(`One or more files are not of the allowed types for this grant code.`));
