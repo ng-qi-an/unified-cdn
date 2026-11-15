@@ -6,7 +6,7 @@ import { type DataTableFeatures } from "../features"
 import { Files } from "@/lib/schema/schemaTypes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, MoreHorizontal, Pen, Trash } from "lucide-react"
+import { Copy, ExternalLink, MoreHorizontal, Pen, Trash } from "lucide-react"
 import { convertFromBytesToSensible } from "@/lib/unitConverter"
 import { mimeToIcon, mimeToReadable } from "@/lib/fileTypes"
 import RenameFileDialog from "./RenameFileDialog"
@@ -104,6 +104,7 @@ export const filesColumns = columnHelper.columns([
                     <DropdownMenuGroup>
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator/>
+                        <DropdownMenuItem onClick={()=> window.navigator.clipboard.writeText(row.original.id)}><Copy/> Copy ID</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setOpenRename(true)}><Pen/> Rename</DropdownMenuItem>
                         <DropdownMenuItem variant="destructive" onClick={()=> setOpenDelete(true)}><Trash/>Delete</DropdownMenuItem>
                     </DropdownMenuGroup>

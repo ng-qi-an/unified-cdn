@@ -45,11 +45,7 @@ paths:
           content: 
             application/json:
               schema:
-                type: object
-                properties:
-                  code:
-                    type: string
-                    description: The generated grant code.
+                $ref: '#/components/schemas/Code'
         '400':
           description: Bad request due to invalid configuration
           content:
