@@ -7,10 +7,9 @@ import { userHasPermissionServer } from "@/lib/permissions/serverPermissionHelpe
 import { redirect } from "next/navigation";
 import DatabaseSwitcher from "./DatabaseSwitcher";
 import DatabaseTabs from "./DatabaseTabs";
-import { Button } from "@/components/ui/button";
-import { Ellipsis } from "lucide-react";
 import { availableServices } from "@/lib/services";
 import { Metadata } from "next";
+import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
 
 export const instant = false;
 
@@ -38,9 +37,17 @@ export default async function DatabasePage({params, children}: {params: Promise<
     const dbData = await db.query.databases.findFirst({
         where: {
             id,
-            ownerId: viewAllPerms.isAuthorised ? {isNotNull: true} : viewAllPerms.user.id
+            OR: [
+                {visibility: "public"},
+                {ownerId: viewAllPerms.isAuthorised ? {isNotNull: true} : viewAllPerms.user.id}
+            ],
         },
         with: {
+            owner: {
+                columns: {
+                    role: true
+                }
+            }
         }
     })
     if (!dbData) return redirect("/dashboard/admin/databases");
@@ -61,7 +68,7 @@ export default async function DatabasePage({params, children}: {params: Promise<
         </div>}]}/>
         <DashboardBody>
             <DashboardSectionHeader title={`${dbData.name}`} description={availableServices.find((x)=> x.id == dbData.provider)?.name ?? "Unknown provider"} beforeHeadingRender={<ProviderIcon provider={dbData.provider}/>} />
-            <DatabaseTabs dbId={dbData.id}/>
+            <DatabaseTabs dbId={dbData.id} disableManage={dbData.ownerId != viewAllPerms.user.id && !checkUserHasHigherPerms(viewAllPerms.user.role ?? "user", dbData.owner?.role ?? "user")}/>
             <div className="h-full overflow-hidden">
                 {children}
             </div>

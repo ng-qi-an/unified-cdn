@@ -2,7 +2,8 @@ import { deleteFiles } from "@/lib/actions/files/deleteFiles";
 import { makeAuditLog } from "@/lib/actions/logs/makeAuditLog";
 import sendNotification from "@/lib/actions/notifications/sendNotification";
 import { db } from "@/lib/db";
-import { InvalidConfigurationError, NotFoundError } from "@/lib/errors";
+import { InsufficientPermissionsError, InvalidConfigurationError, NotFoundError } from "@/lib/errors";
+import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
 import { errorToResponse, userHasPermissionServer, verifyUser } from "@/lib/permissions/serverPermissionHelpers";
 import { getS3Client } from "@/lib/providers/s3/getClient";
 import { isCredentialError } from "@/lib/providers/s3/isCredentialError";
@@ -27,6 +28,7 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
                     id: true,
                     name: true,
                     email: true,
+                    role: true,
                     notif_preferences: true
                 }
             }
@@ -34,6 +36,9 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
     })
     if (!dbData) {
         return errorToResponse(new NotFoundError("Database is not found or you do not have permission to delete it."));
+    }
+    if (!checkUserHasHigherPerms(user.role ?? "user", dbData.owner!.role ?? "user")){
+        return errorToResponse(new InsufficientPermissionsError())
     }
     try {
         if (dbData.files.length > 0) {

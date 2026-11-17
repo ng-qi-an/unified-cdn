@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth"
-import { headers } from "next/headers"
 import KeysList from "./KeysList";
 import { db } from "@/lib/db";
 import { apikey } from "@/lib/schema/auth-schema";
 import { eq, isNotNull } from "drizzle-orm";
 import { userHasPermissionServer } from "@/lib/permissions/serverPermissionHelpers";
+import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
+import { redirect } from "next/navigation";
 
 export const metadata = {
     title: 'API Keys',
@@ -25,10 +25,21 @@ export default async function APIKeysApplication({params}: {params: Promise<{id:
         where: {
             id: appId
         },
+        with: {
+            owner: {
+                columns: {
+                    role: true
+                }
+            }
+        },
         columns: {
-            status: true
+            status: true,
+            ownerId: true
         },
     })
+    if (appData!.ownerId != viewAllPerms.user.id && !checkUserHasHigherPerms(viewAllPerms.user.role ?? "user", appData!.owner?.role ?? "user")) {
+        return redirect(`/dashboard/applications/${appId}`);
+    }
     return <div className="pt-4">
         <KeysList appId={appId} disableCreate={appData!.status != "active"} apiKeys={filteredKeys as unknown as Omit<typeof apikey.$inferSelect, "key">[]}/>
     </div>

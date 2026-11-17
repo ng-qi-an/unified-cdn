@@ -1,7 +1,8 @@
 import { makeDbLog } from "@/lib/actions/logs/dbLog";
 import { makeAuditLog } from "@/lib/actions/logs/makeAuditLog";
 import { db } from "@/lib/db";
-import { InvalidConfigurationError, NotFoundError } from "@/lib/errors";
+import { InsufficientPermissionsError, InvalidConfigurationError, NotFoundError } from "@/lib/errors";
+import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
 import { errorToResponse, userHasPermissionServer, verifyUser } from "@/lib/permissions/serverPermissionHelpers";
 import { HCDNAuthenticationError } from "@/lib/providers/hcdn/errors";
 import { getHCDNClient } from "@/lib/providers/hcdn/getClient";
@@ -19,9 +20,24 @@ export const PATCH = verifyUser(async(req: Request, ctx, user) => {
         return errorToResponse(new InvalidConfigurationError("Some required fields are missing or invalid."));
     }
     const viewAllPerms = await userHasPermissionServer({databases: ['viewAll']}, user);
-    const dbData = (await db.select().from(databases).where(and(eq(databases.id, data.dbId), viewAllPerms.isAuthorised ? isNotNull(databases.id) : eq(databases.ownerId, user.id))))[0];
+    const dbData = await db.query.databases.findFirst({
+        where: {
+            id: data.dbId,
+            ownerId: viewAllPerms.isAuthorised ? {isNotNull: true} : user.id
+        },
+        with: {
+            owner: {
+                columns: {
+                    role: true
+                }
+            }
+        }
+    })
     if (!dbData) {
         return errorToResponse(new NotFoundError("Database is not found or you do not have permission to edit it."));
+    }
+    if (!checkUserHasHigherPerms(user.role ?? "user", dbData.owner!.role ?? "user")){
+        return errorToResponse(new InsufficientPermissionsError())
     }
     if (dbData.provider.startsWith("s3-")) {
         if (!data.keys.accessUrl || !data.keys.accessKeyId || !data.keys.secretAccessKey || !data.keys.bucketName) {

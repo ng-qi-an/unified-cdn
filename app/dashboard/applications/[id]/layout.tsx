@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { AppWindowMac, Ellipsis } from "lucide-react";
 import { availableServices } from "@/lib/services";
 import { Metadata } from "next";
+import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
 
 export const instant = false;
 
@@ -46,6 +47,11 @@ export default async function ApplicationPage({params, children}: {params: Promi
                     provider: true,
                     name: true
                 }
+            },
+            owner: {
+                columns: {
+                    role: true
+                }
             }
         }
     })
@@ -67,7 +73,7 @@ export default async function ApplicationPage({params, children}: {params: Promi
         </div>}]}/>
         <DashboardBody>
             <DashboardSectionHeader title={`${appData.name}`} description={appData.database?.name} beforeHeadingRender={<ProviderIcon provider={appData.database?.provider}/>} actionRender={<Button size="icon-sm" variant="ghost"><Ellipsis/></Button>} />
-            <ApplicationTabs appId={appData.id}/>
+            <ApplicationTabs appId={appData.id} disableManage={appData.ownerId != viewAllPerms.user.id && !checkUserHasHigherPerms(viewAllPerms.user.role ?? "user", appData.owner?.role ?? "user")}/>
             <div className="h-full overflow-hidden">
                 {children}
             </div>

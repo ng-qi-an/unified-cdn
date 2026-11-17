@@ -2,7 +2,8 @@ import { deleteFiles } from "@/lib/actions/files/deleteFiles";
 import { makeAuditLog } from "@/lib/actions/logs/makeAuditLog";
 import sendNotification from "@/lib/actions/notifications/sendNotification";
 import { db } from "@/lib/db";
-import { NotFoundError } from "@/lib/errors";
+import { InsufficientPermissionsError, NotFoundError } from "@/lib/errors";
+import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
 import { errorToResponse, userHasPermissionServer, verifyUser } from "@/lib/permissions/serverPermissionHelpers";
 import { applications } from "@/lib/schema/schema";
 import { eq } from "drizzle-orm";
@@ -32,6 +33,7 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
                     id: true,
                     name: true,
                     email: true,
+                    role: true,
                     notif_preferences: true
                 }
             }
@@ -39,6 +41,9 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
     })
     if (!appData) {
         return errorToResponse(new NotFoundError("Application is not found or you do not have permission to delete it."));
+    }
+    if (!checkUserHasHigherPerms(user.role ?? "user", appData.owner!.role ?? "user")){
+        return errorToResponse(new InsufficientPermissionsError())
     }
     try {
         if (appData.database){

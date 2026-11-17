@@ -7,6 +7,7 @@ import DashboardSidebarLink from "./DashboardSidebarLink";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import Logo from "@/components/Logo";
+import { SiGithub } from "@icons-pack/react-simple-icons";
 
 
 export default async function DashboardSidebar() {
@@ -15,7 +16,7 @@ export default async function DashboardSidebar() {
     })
     if (!data?.user) return null;
     
-    const links: {[header: string]: {name: string, href: string, icon: React.ReactNode}[]} = {
+    const links: {[header: string]: {name: string, href: string, external?: boolean, icon: React.ReactNode}[]} = {
         navigation: [
             {name: "Dashboard", href: "/dashboard", icon: <Home/>},
             {name: "Applications", href: "/dashboard/applications", icon: <AppWindowMac/>},
@@ -31,8 +32,8 @@ export default async function DashboardSidebar() {
             ],
         } : {}),
         help: [
-            {name: "Documentation", href: "/", icon: <Book/>},
-            {name: "Github", href: "/", icon: <ExternalLink/>},
+            {name: "Documentation", href: "/docs", external: true, icon: <Book/>},
+            {name: "Github", href: "/github", external: true, icon: <SiGithub/>},
         ]
     }
     return <Sidebar>
@@ -66,7 +67,7 @@ export default async function DashboardSidebar() {
                 <SidebarGroupContent>
                     <SidebarMenu>
                         {group.map((link, index: number) => {
-                            return <DashboardSidebarLink key={index} href={link.href} Icon={link.icon} name={link.name}/>
+                            return <DashboardSidebarLink key={index} href={link.href} Icon={link.icon} name={link.name} external={link.external}/>
                         })}
                     </SidebarMenu>
                 </SidebarGroupContent>

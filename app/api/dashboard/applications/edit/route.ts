@@ -1,7 +1,8 @@
 import { makeAppLog } from "@/lib/actions/logs/appLog";
 import { makeAuditLog } from "@/lib/actions/logs/makeAuditLog";
 import { db } from "@/lib/db";
-import { InvalidConfigurationError, NotFoundError } from "@/lib/errors";
+import { InsufficientPermissionsError, InvalidConfigurationError, NotFoundError } from "@/lib/errors";
+import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
 import { errorToResponse, userHasPermissionServer, verifyUser } from "@/lib/permissions/serverPermissionHelpers";
 import { applications } from "@/lib/schema/schema";
 import { and, eq, isNotNull } from "drizzle-orm";
@@ -25,11 +26,19 @@ export const PATCH = verifyUser(async(req: Request, ctx, user) => {
                     id: true,
                     name: true
                 }
+            },
+            owner: {
+                columns: {
+                    role: true
+                }
             }
         }
     })
     if (!appData) {
         return errorToResponse(new NotFoundError("Application is not found or you do not have permission to edit it."));
+    }
+    if (!checkUserHasHigherPerms(user.role ?? "user", appData.owner!.role ?? "user")){
+        return errorToResponse(new InsufficientPermissionsError())
     }
     const payload = {
         name: data.name.trim(),

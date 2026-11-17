@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import AppSettingsRendered from "./rendered";
 import { redirect } from "next/navigation";
 import { applications } from "@/lib/schema/schema";
+import { userHasPermissionServer } from "@/lib/permissions/serverPermissionHelpers";
+import { checkUserHasHigherPerms } from "@/lib/permissions/permissionHelpers";
 
 export const instant = false;
 
@@ -14,6 +16,11 @@ export default async function ApplicationSettings({params}:{params: Promise<{id:
     const appData = await db.query.applications.findFirst({
         where: { id },
         with: {
+            owner: {
+                columns: {
+                    role: true
+                }
+            },
             database: {
                 columns: {
                     keys: false,
@@ -34,6 +41,10 @@ export default async function ApplicationSettings({params}:{params: Promise<{id:
             }
         }
     })
+    const viewAllPerms = await userHasPermissionServer({applications: ["viewAll"]});
+    if (appData?.ownerId != viewAllPerms.user.id && !checkUserHasHigherPerms(viewAllPerms.user.role ?? "user", appData!.owner?.role ?? "user")) {
+        return redirect(`/dashboard/applications/${id}`);
+    }
     const otherApps = await db.select({name: applications.name, id: applications.id}).from(applications)
     return <AppSettingsRendered appData={appData!} otherApps={otherApps}/>
 }
