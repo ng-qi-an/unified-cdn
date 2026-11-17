@@ -9,25 +9,35 @@ import { GetSiteConfigReturnType } from "@/lib/actions/site-settings/getSiteConf
 import saveSiteConfigClient from "@/lib/actions/site-settings/saveSiteConfigClient";
 import { roles } from "@/lib/permissions/permissions";
 import revalidateData from "@/lib/revalidateData";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function GeneralSiteSettings({siteConfig}: {siteConfig: GetSiteConfigReturnType}){
     const [allowSignups, setAllowSignups] = useState(siteConfig.auth.allowSignups);
     const [defaultRole, setDefaultRole] = useState(siteConfig.auth.defaultUserRole);
+    const [demoMode, setDemoMode] = useState(siteConfig.general.demoMode);
+    const [demoResetKey, setDemoResetKey] = useState(siteConfig.general.demoResetKey);
     const [changed, setChanged] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     useEffect(()=>{
-        if (siteConfig.auth.allowSignups !== allowSignups || siteConfig.auth.defaultUserRole !== defaultRole){
+        if (siteConfig.auth.allowSignups !== allowSignups || siteConfig.general.demoMode !== demoMode || siteConfig.general.demoResetKey != demoResetKey || siteConfig.auth.defaultUserRole !== defaultRole){
             setChanged(true);
         } else {
             setChanged(false);
         }
-    }, [allowSignups, defaultRole])
+    }, [allowSignups, demoMode, demoResetKey, defaultRole])
     return <form className="contents" onSubmit={async(e)=>{
         e.preventDefault();
         if (!changed) return;
         setSubmitting(true);
         try {
+            await saveSiteConfigClient("general", {
+                general: {
+                    timezone: siteConfig.general.timezone,
+                    demoMode: demoMode,
+                    demoResetKey: demoResetKey
+                }
+            })
             await saveSiteConfigClient("auth", {
                 auth: {
                     allowSignups: allowSignups,
@@ -85,12 +95,28 @@ export default function GeneralSiteSettings({siteConfig}: {siteConfig: GetSiteCo
                         </Select>
                         <FieldDescription>Default role for newly created or signed up users.</FieldDescription>
                     </Field>
+                    <Field orientation="horizontal">
+                        <div className="w-full">
+                            <FieldLabel>Demo Mode</FieldLabel>
+                            <FieldDescription>Enable demo mode for the site. <Link href="https://unified-cdn-docs.ngqian.com" target="_blank">Learn more.</Link></FieldDescription>
+                        </div>
+                        <Switch checked={demoMode} onCheckedChange={(checked)=> setDemoMode(checked)}/>
+                    </Field>
+                    {demoMode && <Field>
+                        <div className="w-full">
+                            <FieldLabel>Demo Reset Key</FieldLabel>
+                            <FieldDescription>Password to reset demo data. Leave blank to disable resets.</FieldDescription>
+                        </div>
+                        <Input value={demoResetKey || ""} onChange={(e)=> setDemoResetKey(e.target.value)} />
+                    </Field>}
                 </FieldGroup>
             </CardContent>
             <CardFooter>
                 <Button disabled={!changed || submitting} type="submit">Save</Button>
                 {changed && <Button className="ml-auto" variant="ghost" type="button" onClick={()=>{
                     setAllowSignups(siteConfig.auth.allowSignups);
+                    setDemoMode(siteConfig.general.demoMode);
+                    setDemoResetKey(siteConfig.general.demoResetKey);
                     setDefaultRole(siteConfig.auth.defaultUserRole);
                 }}>Reset changes</Button>}
             </CardFooter>

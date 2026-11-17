@@ -50,7 +50,7 @@ export default function NotificationPrioritiesSiteSettings({siteConfig}: {siteCo
                 <CardDescription>Adjust how severe each notification type is. Users can configure their notification method to correspond with a priority.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 w-full gap-2 gap-x-4">
+                <div className="grid lg:grid-cols-2 w-full gap-2 gap-x-4">
                     {NotificationTypeList.map((type)=>{
                         return <Field key={type} orientation="horizontal">
                             <FieldLabel>{type}</FieldLabel>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import DashboardSidebar from "./DashboardSidebar";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import DemoModeDialog from "@/components/DemoModeDialog";
 
 export const instant = false;
 
@@ -13,6 +14,7 @@ export default async function Layout({children}: {children: React.ReactNode}) {
     if (session){
         return <div className="flex h-full">
             <SidebarProvider>
+                <DemoModeDialog/>
                 <DashboardSidebar/>
                 <main className="min-w-0 w-full h-screen">
                     {children} 

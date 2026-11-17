@@ -4,6 +4,8 @@ import { NotificationPriorities, NotificationType } from "../notifications/notif
 export type SiteConfigType = {
     general: {
         timezone: string,
+        demoMode: boolean,
+        demoResetKey: string
     },
     auth: {
         allowSignups: boolean,
@@ -32,6 +34,8 @@ export type SiteConfigType = {
 export const defaultSiteConfig: SiteConfigType = {
     general: {
         timezone: "UTC",
+        demoMode: false,
+        demoResetKey: ""
     },
     auth: {
         allowSignups: false,

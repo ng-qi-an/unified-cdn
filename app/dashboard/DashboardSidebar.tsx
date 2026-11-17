@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import Logo from "@/components/Logo";
 import { SiGithub } from "@icons-pack/react-simple-icons";
+import getSiteConfig from "@/lib/actions/site-settings/getSiteConfig";
 
 
 export default async function DashboardSidebar() {
@@ -15,7 +16,8 @@ export default async function DashboardSidebar() {
         headers: await headers()
     })
     if (!data?.user) return null;
-    
+    const siteConfig = await getSiteConfig();
+
     const links: {[header: string]: {name: string, href: string, external?: boolean, icon: React.ReactNode}[]} = {
         navigation: [
             {name: "Dashboard", href: "/dashboard", icon: <Home/>},
@@ -42,7 +44,10 @@ export default async function DashboardSidebar() {
                 <SidebarMenuItem>
                     <SidebarMenuButton className="data-[slot=sidebar-menu-button]:p-2! mt-1 hover:bg-transparent active:bg-transparent">
                         <Logo className="size-5 ml-1"/>
-                        <span className="text-base font-medium">Unified CDN</span>
+                        <div className="flex flex-col">
+                            <span className="text-base font-medium">Unified CDN</span>
+                            {siteConfig.general.demoMode && <span className="text-xs -mt-0.5 text-muted-foreground">Demo mode</span>}
+                        </div>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
