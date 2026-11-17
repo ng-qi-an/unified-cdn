@@ -14,7 +14,7 @@ export default async function Layout({children}: {children: React.ReactNode}) {
         headers: await headers()
     })
     if (session){
-        return <ColorThemeProvider initialColorTheme={session.user.theme}>
+        return <ColorThemeProvider initialColorTheme={session.user.theme || "default"}>
             <div className={cn("flex h-full")}>
                 <SidebarProvider>
                     <DemoModeDialog/>

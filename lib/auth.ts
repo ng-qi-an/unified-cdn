@@ -46,7 +46,8 @@ export const auth = betterAuth({
             },
             theme: {
                 type: "string",
-                input: true
+                required: false,
+                defaultValue: "default",
             }
         }
     },

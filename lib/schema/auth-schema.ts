@@ -30,7 +30,7 @@ export const user = pgTable("user", {
       telegram: { enabled: false, priority: ["high"], chatId: null },
     })
     .notNull(),
-  theme: text("theme"),
+  theme: text("theme").default("default"),
 });
 
 export const session = pgTable(
