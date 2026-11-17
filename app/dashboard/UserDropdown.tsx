@@ -1,15 +1,18 @@
 'use client';
 import AccountSettingsDialog from "@/components/account-settings/AccountSettingsDialog";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
+import { colorThemes, useColorTheme } from "@/components/providers/color-theme-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { toast } from "@/components/ui/toast";
+import saveColorTheme from "@/lib/actions/users/saveColorTheme";
 import { authClient } from "@/lib/auth-client";
 import { Notification, User } from "@/lib/schema/schemaTypes";
 import { UserWithRole } from "better-auth/plugins";
-import { Bell, Check, ChevronsUpDown, LaptopMinimal, LogOut, Moon, Palette, Settings, Sun } from "lucide-react";
+import { cn } from "cn";
+import { Bell, Check, ChevronsUpDown, LaptopMinimal, LogOut, Moon, Paintbrush, Palette, Settings, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,6 +20,7 @@ import { useState } from "react";
 export default function UserDropdown({user}:{user: User}){
     const router = useRouter();
     const { theme, setTheme } = useTheme();
+    const { color, setColor } = useColorTheme();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [notifOpen, setNotifOpen] = useState(false);
     const [accSettingsOpen, setAccSettingsOpen] = useState(false);
@@ -55,9 +59,25 @@ export default function UserDropdown({user}:{user: User}){
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger><Palette/> Theme</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent>
-                        <DropdownMenuItem onClick={() => setTheme("light")}>{theme == "light" ? <Check/> : <Sun/>} Light</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTheme("dark")}>{theme == "dark" ? <Check/> : <Moon/>} Dark</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTheme("system")}>{theme == "system" ? <Check/> : <LaptopMinimal/>} System</DropdownMenuItem>
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem closeOnClick={false} onClick={() => setTheme("light")}>{theme == "light" ? <Check/> : <Sun/>} Light</DropdownMenuItem>
+                            <DropdownMenuItem closeOnClick={false} onClick={() => setTheme("dark")}>{theme == "dark" ? <Check/> : <Moon/>} Dark</DropdownMenuItem>
+                            <DropdownMenuItem closeOnClick={false} onClick={() => setTheme("system")}>{theme == "system" ? <Check/> : <LaptopMinimal/>} System</DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator/>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger><Paintbrush/> Accent</DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuGroup>
+                                    {colorThemes.map((colorTheme)=>{
+                                        return <DropdownMenuItem key={colorTheme} closeOnClick={false} onClick={async() => {
+                                            setColor(colorTheme)
+                                            await saveColorTheme(colorTheme)
+                                        }}><div className={cn(`size-3 shrink-0 rounded-full bg-primary`, colorTheme)}/> {colorTheme} {color == colorTheme && <Check className="ml-auto"/>}</DropdownMenuItem>
+                                    })}
+                                </DropdownMenuGroup>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuSub>
                     </DropdownMenuSubContent>
                 </DropdownMenuSub>
             </DropdownMenuGroup>

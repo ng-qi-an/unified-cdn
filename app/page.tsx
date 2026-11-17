@@ -1,6 +1,5 @@
+import { redirect } from "next/navigation"
+
 export default async function Home() {
-  return <>
-    Unified CDN
-    <a href="/login">Login</a>
-  </>
+  return redirect("/auth/sign-in")
 }
