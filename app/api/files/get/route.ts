@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { InvalidConfigurationError, UnauthorisedError } from "@/lib/errors";
 import { errorToResponse, userHasPermissionServer, verifyAPIKeyOrCodeOrUser } from "@/lib/permissions/serverPermissionHelpers";
 import { files as filesDb } from "@/lib/schema/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 
 export const GET = verifyAPIKeyOrCodeOrUser("GET_FILES", async (req, ctx, apiKey, user, code) => {
     const siteConfig = await getSiteConfig();
@@ -31,6 +31,7 @@ export const GET = verifyAPIKeyOrCodeOrUser("GET_FILES", async (req, ctx, apiKey
         return errorToResponse(new UnauthorisedError());
     }
     const fileIds = req.nextUrl.searchParams.get("ids")?.split(", ") ?? [];
-    const files = await db.select().from(filesDb).where(and(eq(filesDb.applicationId, appData.id), fileIds ? inArray(filesDb.id, fileIds) : undefined));
-    return Response.json(files, {status: 200});
+    console.log("fileIds", fileIds);
+    const files = await db.select().from(filesDb).where(and(eq(filesDb.applicationId, appData.id), fileIds.length > 0 ? inArray(filesDb.id, fileIds) : isNotNull(filesDb.id)));
+    return Response.json({files: files}, {status: 200});
 })

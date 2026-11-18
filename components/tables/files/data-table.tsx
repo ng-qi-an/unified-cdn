@@ -86,11 +86,10 @@ export function FilesDataTable<TData extends RowData>({
             }
             const formData = new FormData(uploadFormRef.current!);
             console.log("Uploading files:", formData.getAll("files"));
-            formData.append("appId", appId);
             uploadInputRef.current!.value = "";
             toast.promise(new Promise(async (resolve, reject) => {
               try {
-                const response = await fetch(`/api/files/upload`, {
+                const response = await fetch(`/api/files/upload?appId=${appId}`, {
                   method: "POST",
                   body: formData
                 });
