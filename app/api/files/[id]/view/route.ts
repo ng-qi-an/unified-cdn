@@ -18,14 +18,28 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
     if (!fileData){
         return errorToResponse(new NotFoundError());
     }
+    const range = req.headers.get("range") ?? undefined;
     if (fileData.database?.provider == "hackclub-cdn"){
-        const response = await fetch(`https://cdn.hackclub.com/${fileData.key}/${fileData.name}`);
+        let response: Response;
+        try {
+            response = await fetch(`https://cdn.hackclub.com/${fileData.key}/${fileData.name}`, {
+                signal: req.signal,
+                cache: "no-store",
+                headers: range ? { Range: range } : {},
+            });
+        } catch (error) {
+            if (req.signal.aborted){
+                return new Response("Client closed connection", {status: 499});
+            }
+            console.error("Error downloading file from HCDN:", error);
+            return errorToResponse(error);
+        }
         const headers = new Headers(response.headers);
         await updateRequestsAnalyticsEvent({increment: 1, appId: fileData.applicationId, timezone: siteConfig.general.timezone});
         return new Response(response.body, {
             status: response.status,
             statusText: response.statusText,
-            headers: headers
+            headers: headers,
         });
     } else if (fileData.database?.provider.startsWith("s3-")) {
         const client = getS3Client(fileData.database.keys.accessUrl, fileData.database.keys.accessKeyId, fileData.database.keys.secretAccessKey);
@@ -33,16 +47,20 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
             const response = await client.send(new GetObjectCommand({
                 Bucket: fileData.database.keys.bucketName,
                 Key: fileData.key,
-            }));
+                Range: range,
+            }), { abortSignal: req.signal });
             if (!response.Body) {
                 return errorToResponse(new NotFoundError("The file has no content."));
             }
-
             const headers = new Headers();
             headers.set("Content-Type", response.ContentType || "application/octet-stream");
             if (response.ContentLength !== undefined) headers.set("Content-Length", response.ContentLength.toString());
+            headers.set("Accept-Ranges", "bytes");
+
+            if (response.ContentRange) headers.set("Content-Range", response.ContentRange);
             await updateRequestsAnalyticsEvent({increment: 1, appId: fileData.applicationId, timezone: siteConfig.general.timezone});
             return new Response(response.Body.transformToWebStream(), {
+                status: response.ContentRange ? 206 : 200,
                 headers,
             });
         } catch (error) {

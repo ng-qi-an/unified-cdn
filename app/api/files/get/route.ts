@@ -11,12 +11,6 @@ export const GET = verifyAPIKeyOrCodeOrUser("GET_FILES", async (req, ctx, apiKey
     if (!siteConfig.general.timezone){
         return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
     }
-    if (code){
-        const codeBody = code.data as GrantCodeActions["GET_FILES"];
-        if (!codeBody || !codeBody.fileIds || !Array.isArray(codeBody.fileIds) || codeBody.fileIds.length === 0){
-            return errorToResponse(new InvalidConfigurationError("The grant code does not have the required data."));
-        }
-    }
     let appData;
     if (apiKey){
         appData = await db.query.applications.findFirst({where: {id: apiKey.metadata?.appId}, columns: {id: true}}) ?? null;
@@ -31,7 +25,11 @@ export const GET = verifyAPIKeyOrCodeOrUser("GET_FILES", async (req, ctx, apiKey
         return errorToResponse(new UnauthorisedError());
     }
     const fileIds = req.nextUrl.searchParams.get("ids")?.split(", ") ?? [];
-    console.log("fileIds", fileIds);
+    if (code){
+        if (code.data.fileIds && code.data.fileIds.length > 0 && JSON.stringify(code.data.fileIds.sort()) != JSON.stringify(fileIds.sort())){
+            return errorToResponse(new UnauthorisedError("The file IDs provided do not match the file IDs allowed by the grant code."));
+        }
+    }
     const files = await db.select().from(filesDb).where(and(eq(filesDb.applicationId, appData.id), fileIds.length > 0 ? inArray(filesDb.id, fileIds) : isNotNull(filesDb.id)));
     return Response.json({files: files}, {status: 200});
 })
