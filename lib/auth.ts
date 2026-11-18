@@ -81,6 +81,25 @@ export const auth = betterAuth({
         }
     },
     databaseHooks: {
+        user: {
+            create: {
+                before: async (user, ctx) => {
+                    // made on dashboard
+                    const path = (ctx as unknown as { path?: unknown })?.path;
+                    if (typeof path === "string" && path.startsWith("/admin")) {
+                        return;
+                    }
+                    // made via signup
+                    const siteConfig = await getSiteConfig();
+                    return {
+                        data: {
+                            ...user,
+                            role: siteConfig.auth.defaultUserRole,
+                        },
+                    };
+                },
+            },
+        },
         session: {
             create: {
                 before: async(session, ctx) => {

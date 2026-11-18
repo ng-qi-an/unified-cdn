@@ -13,17 +13,17 @@ import CreateKeyDialog from "../applications/[id]/api-keys/CreateKeyDialog";
 import { apikey } from "@/lib/schema/auth-schema";
 import { Label } from "@/components/ui/label";
 
-export default function ClientApiKeysPage({sortedApiKeys, fetchedApps, showAllApps, userId}: {sortedApiKeys: {[appId: string] : Omit<typeof apikey.$inferSelect, "key">[]}, fetchedApps: {id: string, name: string, status: string, owner: {id: string, name: string} | null}[], showAllApps: boolean, userId?: string}){
+export default function ClientApiKeysPage({sortedApiKeys, fetchedApps, showAllApps, userId, showAdmin}: {sortedApiKeys: {[appId: string] : Omit<typeof apikey.$inferSelect, "key">[]}, fetchedApps: {id: string, name: string, status: string, owner: {id: string, name: string} | null}[], showAllApps: boolean, userId?: string, showAdmin?: boolean}){
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     return <Dashboard>
         <DashboardHeader breadcrumbs={[{name: "API Keys"}]}/>
         <DashboardBody>
             <DashboardSectionHeader title="API Keys" description={showAllApps ? "Manage all API keys on the platform" : `Manage your API keys for all your applications.`} actionRender={<>
-                <Link href={showAllApps ? "/dashboard/api-keys" : "/dashboard/api-keys?view=admin"}>
+                {showAdmin && <Link href={showAllApps ? "/dashboard/api-keys" : "/dashboard/api-keys?view=admin"}>
                     <Button size="sm" className="h-10" variant="secondary">
                         {!showAllApps ? "Admin view" : "Personal view"}
                     </Button>
-                </Link>
+                </Link>}
                 <Button size="sm" className="h-10" onClick={()=> setShowCreateDialog(true)}>
                     <Plus/>
                     Create new
