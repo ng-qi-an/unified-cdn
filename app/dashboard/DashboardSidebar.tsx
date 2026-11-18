@@ -27,10 +27,12 @@ export default async function DashboardSidebar() {
         ],
         ...(data.user.role == "admin" || data.user.role == "superAdmin" ? {
             management: [
-                    {name: "Users", href: "/dashboard/admin/users", icon: <Users/>},
-                    {name: "Databases", href: "/dashboard/admin/databases", icon: <Database/>},
-                    {name: "Audit", href: "/dashboard/admin/audit", icon: <Shield/>},
-                    {name: "Settings", href: "/dashboard/admin/settings", icon: <Settings/>},
+                {name: "Users", href: "/dashboard/admin/users", icon: <Users/>},
+                {name: "Databases", href: "/dashboard/admin/databases", icon: <Database/>},
+                {name: "Audit", href: "/dashboard/admin/audit", icon: <Shield/>},
+                ...(data.user.role == "superAdmin" ? [
+                    {name: "Settings", href: "/dashboard/admin/settings", icon: <Settings/>}
+                ] : []),
             ],
         } : {}),
         help: [
