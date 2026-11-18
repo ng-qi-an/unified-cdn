@@ -14,13 +14,9 @@ import Busboy from "@fastify/busboy";
 import { Upload } from "@aws-sdk/lib-storage";
 import { Readable } from "node:stream";
 import { HCDNClient } from "@/lib/providers/hcdn/client";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { createWriteStream, promises as fsp } from "node:fs";
-import { uploadStreamedFiles } from "@/lib/providers/hcdn/uploadStreamedFiles";
-import { HCDNAuthenticationError } from "@/lib/providers/hcdn/errors";
 import { finaliseUpload } from "@/lib/actions/files/finaliseUpload";
-import { pipeline } from "node:stream/promises";
+import { uploadBufferedFile } from "@/lib/providers/hcdn/uploadBufferedFile";
+import { tryEnterUpload, leaveUpload } from "@/lib/actions/files/uploadGate";
 
 const maxFileSize = convertUnit(0.5, "gb", "b"); // 0.5 GB in bytes
 const maxFiles = 20; // Maximum number of files allowed
@@ -30,6 +26,7 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
     if (!siteConfig.general.timezone){
         return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
     }
+    let uploadSlot = false;
     try {
         let appData: Pick<Application, "id" | "limit"> & { database: { provider: string, id: string, keys: any | undefined, limit: number } | null } | null = null;
         if (apiKey){
@@ -52,13 +49,6 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
                 return errorToResponse(new InvalidConfigurationError("The grant code does not have the required data."));
             }
         }
-        const busboy = new Busboy({
-            headers: Object.fromEntries(req.headers.entries()) as { "content-type": string; [key: string]: string },
-            limits: {
-                files: maxFiles,
-                fileSize: maxFileSize
-            }
-        })
         if (!dbProvider && dbProvider != "hackclub-cdn" && !dbProvider?.startsWith("s3-")){
             return errorToResponse(new InvalidConfigurationError("The configured database provider is not supported."));
         }
@@ -75,93 +65,60 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
         }
         if (dbProvider == "hackclub-cdn"){
             const hcdn = new HCDNClient(appData.database!.keys.apiKey);
-            const hcdnFailed: { filename: string; reason: string }[] = [];
-            const spooled: { tmpPath: string; filename: string; mimeType: string; size: number }[] = [];
-            const tmpPaths: string[] = [];
-            const spoolTasks: Promise<void>[] = [];
-            let hitFilesLimit = false;
-            busboy.on("filesLimit", () => {
-                hitFilesLimit = true;
+            uploadSlot = tryEnterUpload();
+            if (!uploadSlot) {
+                return Response.json({ error: "SERVER_BUSY", message: "Server is busy handling uploads. Please try again in a few seconds." }, { status: 503, headers: { "Retry-After": "5" } });
+            }
+            const busboy = new Busboy({
+                headers: Object.fromEntries(req.headers.entries()) as { "content-type": string; [key: string]: string },
+                limits: { files: maxFiles, fileSize: maxFileSize }
             });
+            const hcdnFailed: { filename: string; reason: string }[] = [];
+            const forwardTasks: Promise<{ ok: true; file: typeof filesDb.$inferInsert } | { ok: false; filename: string; reason: string }>[] = [];
             let receivedFiles = 0;
+            let hitFilesLimit = false;
+            let lastFinishedFile: Promise<void> = Promise.resolve();
+            busboy.on("filesLimit", () => { hitFilesLimit = true; });
             busboy.on("file", (name, stream, filename, _encoding, mimeType) => {
-                receivedFiles += 1
                 if (name !== "files") { return stream.resume(); }
+                receivedFiles+= 1;
                 if (codeBody?.allowedFileTypes && !codeBody.allowedFileTypes.includes(mimeType)) {
                     hcdnFailed.push({ filename, reason: `File type ${mimeType} is not allowed for this grant code.` });
                     return stream.resume();
                 }
-                const tmpPath = join(tmpdir(), `ucdn-${generateId(16)}`);
-                tmpPaths.push(tmpPath);
-                let bytes = 0;
-                let hitLimit = false;
-                stream.on("data", (chunk) => { bytes += chunk.length; });
-                stream.on("limit", () => { hitLimit = true; });
-                spoolTasks.push(
-                    pipeline(stream, createWriteStream(tmpPath)).then(() => {
-                        if (hitLimit || (stream as unknown as { truncated?: boolean }).truncated) {
-                            hcdnFailed.push({ filename, reason: `File size exceeds the maximum allowed size of ${maxFileSize} bytes.` });
-                            return;
-                        }
-                        spooled.push({ tmpPath, filename, mimeType, size: bytes });
-                    }).catch(() => {
-                        hcdnFailed.push({ filename, reason: "Failed to receive file." });
-                    })
-                );
+                const task = lastFinishedFile.then(() => uploadBufferedFile(hcdn, stream, { filename, mimeType, maxBytes: maxFileSize, appId: appData.id, databaseId: appData.database?.id ?? "" }));
+                lastFinishedFile = task.then(() => undefined, () => undefined);
+                forwardTasks.push(task);
             });
             req.signal.addEventListener("abort", () => busboy.destroy());
-            Readable.fromWeb(req.body as any).pipe(busboy);
+            Readable.fromWeb(req.body as unknown as import("node:stream/web").ReadableStream).pipe(busboy);
             await new Promise<void>((resolve, reject) => {
                 busboy.on("finish", () => resolve());
                 busboy.on("error", reject);
             });
-            await Promise.all(spoolTasks);
-            try {
-                if (receivedFiles == 0) {
-                    return errorToResponse(new InvalidConfigurationError("No files were uploaded."));
+            const results = await Promise.all(forwardTasks);
+            const hcdnSuccess = results.filter(r => r.ok).map(r => r.file);
+            hcdnFailed.push(...results.filter(r => !r.ok).map(r => ({ filename: r.filename, reason: r.reason })));
+            const hcdnIds = hcdnSuccess.map((f) => f.key);
+            return finaliseUpload(hcdnSuccess, hcdnFailed, receivedFiles, async () => {
+                if (hcdnIds.length > 0) {
+                    await hcdn.deleteFiles(hcdnIds).catch((err) => {
+                        console.error("Error cleaning up files from HCDN:", err);
+                    });
                 }
-                let hcdnUploads: { id: string; filename: string; size: number; content_type: string }[] = [];
-                if (spooled.length > 0) {
-                    let batch;
-                    try {
-                        batch = await uploadStreamedFiles(hcdn, spooled);
-                    } catch (err) {
-                        if (err instanceof HCDNAuthenticationError) {
-                            return errorToResponse(new InvalidConfigurationError("Could not connect to database provider. Please check your database key configurations."));
-                        }
-                        throw err;
-                    }
-                    hcdnFailed.push(...batch.failed);
-                    hcdnUploads = batch.uploads;
-                }
-                const hcdnSuccess: typeof filesDb.$inferInsert[] = hcdnUploads.map((u) => ({
-                    id: generateId(16),
-                    applicationId: appData.id,
-                    databaseId: appData.database!.id,
-                    key: u.id,
-                    name: u.filename,
-                    contentType: u.content_type,
-                    size: u.size
-                }));
-                if (hcdnSuccess.length === 0) {
-                    return errorToResponse(new InvalidConfigurationError("All file uploads failed. Please check your configuration and try again."));
-                }
-                const hcdnIds = hcdnSuccess.map((f) => f.key);
-                return finaliseUpload(hcdnSuccess, hcdnFailed, receivedFiles, async () => {
-                    if (hcdnIds.length > 0) {
-                        await hcdn.deleteFiles(hcdnIds).catch((err) => {
-                            console.error("Error cleaning up files from HCDN:", err);
-                        });
-                    }
-                }, {...finalisedCtx, filesLimitExceeded: hitFilesLimit});
-            } finally {
-                await Promise.all(tmpPaths.map((p) => fsp.unlink(p).catch(() => {})));
-            }
-
+            }, { ...finalisedCtx, filesLimitExceeded: hitFilesLimit });
         } else if (dbProvider.startsWith("s3-")) {
             const client = getS3Client(appData.database!.keys.accessUrl, appData.database!.keys.accessKeyId, appData.database!.keys.secretAccessKey);
             const uploadTasks: Promise<{ok: true, file: typeof filesDb.$inferInsert} | {ok: false, filename: string, reason: string}>[] = [];
             let hitFilesLimit = false;
+            
+            const busboy = new Busboy({
+                headers: Object.fromEntries(req.headers.entries()) as { "content-type": string; [key: string]: string },
+                limits: {
+                    files: maxFiles,
+                    fileSize: maxFileSize
+                }
+            })
             busboy.on("filesLimit", () => {
                 hitFilesLimit = true;
             });
@@ -263,5 +220,9 @@ export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, ap
     } catch (error) {
         console.error("Error processing file upload:", error);
         return errorToResponse(error);
+    } finally {
+        if (uploadSlot) {
+            leaveUpload()
+        }
     }
 })
