@@ -22,8 +22,10 @@ const finalRelations = {
   },
 };
 
-if (!process.env.DATABASE_URL) {
+if (!process.env.DATABASE_URL && process.env.NEXT_PHASE !== 'phase-production-build') {
   throw new Error('DATABASE_URL environment variable is not set.');
 }
 
-export const db = drizzle(process.env.DATABASE_URL!, { relations: finalRelations });
+export const db = drizzle(process.env.DATABASE_URL ?? 'postgres://build:build@localhost:5432/build', {
+  relations: finalRelations,
+});

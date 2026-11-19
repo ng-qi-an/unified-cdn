@@ -18,25 +18,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Write build .env from secret
-        env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
-        run: |
-          if [ -z "$ENV_FILE" ]; then
-            echo "Error: ENV_FILE secret is missing or empty."
-            exit 1
-          fi
-          printf '%s' "$ENV_FILE" > .env
-
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.docker
           push: true
           tags: ghcr.io/ng-qi-an/unified-cdn:latest
-          secret-files: |
-            envfile=.env
-
-      - name: Remove temporary .env
-        if: always()
-        run: rm -f .env

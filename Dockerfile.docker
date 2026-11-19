@@ -44,6 +44,7 @@
   COPY . .
 
   ENV NODE_ENV=production
+  ENV OUTPUT_METHOD=docker
 
   # Next.js collects completely anonymous telemetry data about general usage.
   # Learn more here: https://nextjs.org/telemetry
