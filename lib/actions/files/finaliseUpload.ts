@@ -71,5 +71,11 @@ export async function finaliseUpload(successFiles: typeof filesDb.$inferInsert[]
     await updateSizeAnalyticsEvent({ increment: totalUploadSize, appId: ctx.appId, timezone: ctx.timezone });
     await makeAppLog({ appId: ctx.appId, code: "FILE_CREATED", data: { files: successFiles.map((f) => ({ id: f.id, name: f.name, size: f.size })) }, userId: ctx.userId, apiKeyId: ctx.apiKeyId });
     await makeDbLog({ dbId: ctx.databaseId, code: "FILE_CREATED", data: { files: successFiles.map((f) => ({ id: f.id, name: f.name, size: f.size })) }, userId: ctx.userId, appId: ctx.appId });
-    return Response.json({ uploads: successFiles, failed: failedFiles });
+    return Response.json({ uploads: successFiles, failed: failedFiles }, {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+    });
 }

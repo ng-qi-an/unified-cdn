@@ -17,11 +17,35 @@ import { HCDNClient } from "@/lib/providers/hcdn/client";
 import { finaliseUpload } from "@/lib/actions/files/finaliseUpload";
 import { uploadBufferedFile } from "@/lib/providers/hcdn/uploadBufferedFile";
 import { tryEnterUpload, leaveUpload } from "@/lib/actions/files/uploadGate";
+import { NextRequest, NextResponse } from "next/server";
 
 const maxFileSize = convertUnit(0.5, "gb", "b"); // 0.5 GB in bytes
 const maxFiles = 20; // Maximum number of files allowed
 
-export const POST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, apiKey, user, code) => {
+// This is for cors cause we excluded it earlier
+
+export async function OPTIONS(req: NextRequest) {
+    const origin = req.headers.get('origin') ?? '*';
+    const requested = req.headers.get('access-control-request-headers');
+    return new NextResponse(null, { status: 204, headers: {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': requested ?? 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+        'Access-Control-Max-Age': '86400',
+        'Vary': 'Origin',
+    }});
+}
+
+// Cors wrapper
+export const POST = async (req: NextRequest, ctx: Parameters<typeof uploadPOST>[1]) => {
+    const res = await uploadPOST(req, ctx);
+    const origin = req.headers.get('origin') ?? '*';
+    res.headers.set('Access-Control-Allow-Origin', origin);
+    res.headers.set('Vary', 'Origin');
+    return res;
+};
+
+const uploadPOST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, apiKey, user, code) => {
     const siteConfig = await getSiteConfig();
     if (!siteConfig.general.timezone){
         return errorToResponse(new InvalidConfigurationError("The site's timezone is not set."));
