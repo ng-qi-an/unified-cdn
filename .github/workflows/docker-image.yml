@@ -9,6 +9,13 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        include:
+          - target: production
+            tag: latest
+          - target: demo
+            tag: demo
     steps:
       - uses: actions/checkout@v4
 
@@ -18,9 +25,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Write build .env from secret
+        env:
+          ENV_PROD: ${{ secrets.ENV_FILE }}
+          ENV_DEMO: ${{ secrets.ENV_FILE_DEMO }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          if [ "$TARGET" = "demo" ]; then
+            SECRET_VALUE="$ENV_DEMO"
+            SECRET_NAME="ENV_FILE_DEMO"
+          else
+            SECRET_VALUE="$ENV_PROD"
+            SECRET_NAME="ENV_FILE"
+          fi
+          if [ -z "$SECRET_VALUE" ]; then
+            echo "Error: $SECRET_NAME secret is missing or empty."
+            exit 1
+          fi
+          printf '%s' "$SECRET_VALUE" > .env
+
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.docker
           push: true
-          tags: ghcr.io/ng-qi-an/unified-cdn:latest
+          tags: ghcr.io/ng-qi-an/unified-cdn:${{ matrix.tag }}
+          secret-files: |
+            envfile=.env
+
+      - name: Remove temporary .env
+        if: always()
+        run: rm -f .env
