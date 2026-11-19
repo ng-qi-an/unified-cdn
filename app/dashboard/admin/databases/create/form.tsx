@@ -31,6 +31,7 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
     const [accessKeyId, setAccessKeyId] = useState("");
     const [secretAccessKey, setSecretAccessKey] = useState("");
     const [accessUrl, setAccessUrl] = useState("");
+    const [region, setRegion] = useState("");
     const [bucketName, setBucketName] = useState("");
     const s3BucketNameRegex = /^(?!\d{1,3}(?:\.\d{1,3}){3}$)(?!.*\.\.)(?!.*\.-)(?!.*-\. )[a-z0-9](?:[a-z0-9.-]{1,61}[a-z0-9])$/
     const isS3BucketNameValid = s3BucketNameRegex.test(bucketName) && bucketName.length >= 3 && bucketName.length <= 63;
@@ -66,7 +67,8 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
                         accessUrl: accessUrl,
                         accessKeyId: accessKeyId,
                         secretAccessKey: secretAccessKey,
-                        bucketName: bucketName
+                        bucketName: bucketName,
+                        region: region.trim() || undefined
                     } : provider == "hackclub-cdn" ? {
                         apiKey: apiKey
                     } : {},
@@ -166,6 +168,11 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
                                         <Input type="url" value={accessUrl} onChange={(e)=> setAccessUrl(e.target.value)} placeholder={provider == "s3-cloudflare-r2" ? "https://[...].r2.cloudflarestorage.com" : provider == "s3-backblaze-b2" ? "https://s3.[...].backblazeb2.com" : provider == "s3-amazon-s3" ?  "https://s3.[...].amazonaws.com" : ""} required />
                                         <FieldDescription>This should be a link, not an API key. You should use the S3 configuration.</FieldDescription>
                                     </Field>
+                                    {provider == "s3-amazon-s3" && <Field>
+                                        <FieldLabel>Region</FieldLabel>
+                                        <Input type="text" value={region} onChange={(e)=> setRegion(e.target.value)} required placeholder="ap-southeast-1"/>
+                                        <FieldDescription>The region where your bucket is located. Typically can be found from your access URL.</FieldDescription>
+                                    </Field>}
                                     <Field>
                                         <FieldLabel>Access Key ID</FieldLabel>
                                         <Input type="text" value={accessKeyId} onChange={(e)=> setAccessKeyId(e.target.value)} required/>

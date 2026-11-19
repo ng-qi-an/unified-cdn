@@ -42,7 +42,7 @@ export const GET = async (req: NextRequest, {params}: {params: Promise<{id: stri
             headers: headers,
         });
     } else if (fileData.database?.provider.startsWith("s3-")) {
-        const client = getS3Client(fileData.database.keys.accessUrl, fileData.database.keys.accessKeyId, fileData.database.keys.secretAccessKey);
+        const client = getS3Client(fileData.database.keys.accessUrl, fileData.database.keys.accessKeyId, fileData.database.keys.secretAccessKey, fileData.database.keys.region);
         try {
             const response = await client.send(new GetObjectCommand({
                 Bucket: fileData.database.keys.bucketName,

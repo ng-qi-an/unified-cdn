@@ -24,7 +24,7 @@ export const POST = verifyUserWithPermission(async(user)=>{
         if (!keys.accessUrl || !keys.accessKeyId || !keys.secretAccessKey || !keys.bucketName) {
             return Response.json({ error: "INVALID_CONFIGURATION", message: "Access URL, access key ID, secret access key and bucketName are required" }, { status: 400 });
         }
-        const client = getS3Client(keys.accessUrl, keys.accessKeyId, keys.secretAccessKey);
+        const client = getS3Client(keys.accessUrl, keys.accessKeyId, keys.secretAccessKey, keys.region);
         try {
             const r = await client.send(new ListBucketsCommand())
             if (!r.Buckets) {
@@ -45,8 +45,12 @@ export const POST = verifyUserWithPermission(async(user)=>{
                     if (error instanceof AccessDenied){
                         return Response.json({ error: "INVALID_CONFIGURATION", message: "This key has no permission to create buckets. Update the key's permissions, or create the bucket on your own." }, { status: 401 });
                     }
-                    if (error instanceof Error && (error.name == "InvalidBucketName")) {
-                        return Response.json({ error: "INVALID_CONFIGURATION", message: "The bucket name you provided is invalid. Bucket names must be between 3 and 63 characters long, and can only contain lowercase letters, numbers, and hyphens." }, { status: 400 });
+                    if (error instanceof Error){
+                        if (error.name == "InvalidBucketName") {
+                            return Response.json({ error: "INVALID_CONFIGURATION", message: "The bucket name you provided is invalid. Bucket names must be between 3 and 63 characters long, and can only contain lowercase letters, numbers, and hyphens." }, { status: 400 });
+                        } else if (error.name == "BucketAlreadyExists") {
+                            return Response.json({ error: "INVALID_CONFIGURATION", message: "The bucket name you provided is already in use. Bucket names must be globally unique." }, { status: 400 });
+                        }
                     }
                     console.error(error);
                     return Response.json({ error: "INTERNAL", message: "Unexpected error occurred while creating bucket."}, {status: 500});

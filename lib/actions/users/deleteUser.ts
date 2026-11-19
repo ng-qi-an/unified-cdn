@@ -64,7 +64,7 @@ export default async function deleteUser(targetUser: { id: string; applications:
             }
             if (promiseResponse.status == "success"){
                 if (database.provider.startsWith("s3-")) {
-                    const client = getS3Client(database.keys.accessUrl, database.keys.accessKeyId, database.keys.secretAccessKey);
+                    const client = getS3Client(database.keys.accessUrl, database.keys.accessKeyId, database.keys.secretAccessKey, database.keys.region);
                     try {
                         const r = await client.send(new DeleteBucketCommand({ Bucket: database.keys.bucketName }));
                         console.log("Delete bucket response meta:", r.$metadata);

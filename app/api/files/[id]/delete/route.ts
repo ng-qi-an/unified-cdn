@@ -62,7 +62,7 @@ export const DELETE = verifyAPIKeyOrCodeOrUser("DELETE_FILE", async (req, ctx: {
                 return errorToResponse(error);
             }
         } else if (file.database?.provider.startsWith("s3-")) {
-            const client = getS3Client(file.database.keys.accessUrl, file.database.keys.accessKeyId, file.database.keys.secretAccessKey);
+            const client = getS3Client(file.database.keys.accessUrl, file.database.keys.accessKeyId, file.database.keys.secretAccessKey, file.database.keys.region);
             try {
                 const response = await client.send(new DeleteObjectCommand({
                     Bucket: file.database.keys.bucketName,

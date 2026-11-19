@@ -12,11 +12,12 @@ export default function ServiceSettingsCard({provider, keys, setKeys}: {provider
     const [accessKeyId, setAccessKeyId] = useState(keys.accessKeyId);
     const [secretAccessKey, setSecretAccessKey] = useState(keys.secretAccessKey);
     const [bucketName, setBucketName] = useState(keys.bucketName);
+    const [region, setRegion] = useState(keys.region || "");
     const [apiKey, setApiKey] = useState(keys.apiKey);
     
     useEffect(()=>{
-        setKeys({accessUrl, accessKeyId, secretAccessKey, bucketName, apiKey})
-    }, [accessUrl, accessKeyId, secretAccessKey, bucketName, apiKey])
+        setKeys({accessUrl, accessKeyId, secretAccessKey, bucketName, region, apiKey})
+    }, [accessUrl, accessKeyId, secretAccessKey, bucketName, region, apiKey])
 
     const s3BucketNameRegex = /^(?!\d{1,3}(?:\.\d{1,3}){3}$)(?!.*\.\.)(?!.*\.-)(?!.*-\. )[a-z0-9](?:[a-z0-9.-]{1,61}[a-z0-9])$/
     const isS3BucketNameValid = bucketName && s3BucketNameRegex.test(bucketName) && bucketName.length >= 3 && bucketName.length <= 63;
@@ -39,6 +40,11 @@ export default function ServiceSettingsCard({provider, keys, setKeys}: {provider
                         <Input type="url" value={accessUrl} onChange={(e)=> setAccessUrl(e.target.value)} placeholder={provider == "s3-cloudflare-r2" ? "https://[...].r2.cloudflarestorage.com" : provider == "s3-backblaze-b2" ? "https://s3.[...].backblazeb2.com" : provider == "s3-amazon-s3" ?  "https://s3.[...].amazonaws.com" : ""} required />
                         <FieldDescription>This should be a link, not an API key. You should use the S3 configuration.</FieldDescription>
                     </Field>
+                    {provider == "s3-amazon-s3" && <Field>
+                        <FieldLabel>Region</FieldLabel>
+                        <Input type="text" value={region} onChange={(e)=> setRegion(e.target.value)} required placeholder="ap-southeast-1"/>
+                        <FieldDescription>The region where your bucket is located. Typically can be found from your access URL.</FieldDescription>
+                    </Field>}
                     <Field>
                         <FieldLabel>Access Key ID</FieldLabel>
                         <Input type="text" value={accessKeyId} onChange={(e)=> setAccessKeyId(e.target.value)} required/>

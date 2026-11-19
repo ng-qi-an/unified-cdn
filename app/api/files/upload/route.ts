@@ -132,7 +132,7 @@ const uploadPOST = verifyAPIKeyOrCodeOrUser("UPLOAD_FILES", async (req, ctx, api
                 }
             }, { ...finalisedCtx, filesLimitExceeded: hitFilesLimit });
         } else if (dbProvider.startsWith("s3-")) {
-            const client = getS3Client(appData.database!.keys.accessUrl, appData.database!.keys.accessKeyId, appData.database!.keys.secretAccessKey);
+            const client = getS3Client(appData.database!.keys.accessUrl, appData.database!.keys.accessKeyId, appData.database!.keys.secretAccessKey, appData.database!.keys.region);
             const uploadTasks: Promise<{ok: true, file: typeof filesDb.$inferInsert} | {ok: false, filename: string, reason: string}>[] = [];
             let hitFilesLimit = false;
             

@@ -32,7 +32,7 @@ export async function deleteFiles({filesFromDb, keys, provider}: {filesFromDb: {
             }
         }
     } else if (provider.startsWith("s3-")) {
-        const client = getS3Client(keys.accessUrl, keys.accessKeyId, keys.secretAccessKey);
+        const client = getS3Client(keys.accessUrl, keys.accessKeyId, keys.secretAccessKey, keys.region);
         try {
             const response = await client.send(new DeleteObjectsCommand({
                 Bucket: keys.bucketName,

@@ -43,7 +43,7 @@ export const PATCH = verifyUser(async(req: Request, ctx, user) => {
         if (!data.keys.accessUrl || !data.keys.accessKeyId || !data.keys.secretAccessKey || !data.keys.bucketName) {
             return errorToResponse(new InvalidConfigurationError("Access URL, access key ID, secret access key and bucketName are required"));
         }
-        const client = getS3Client(data.keys.accessUrl, data.keys.accessKeyId, data.keys.secretAccessKey);
+        const client = getS3Client(data.keys.accessUrl, data.keys.accessKeyId, data.keys.secretAccessKey, data.keys.region);
         try {
             const r = await client.send(new ListBucketsCommand())
             if (!r.Buckets) {

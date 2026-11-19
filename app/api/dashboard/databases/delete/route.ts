@@ -47,7 +47,7 @@ export const DELETE = verifyUser(async(req: Request, ctx, user) => {
         console.log("Deleted", dbData.files.length, "files from database", dbData.id);
         await db.delete(databases).where(eq(databases.id, dbData.id));
         if (dbData.provider.startsWith("s3-")) {
-            const client = getS3Client(dbData.keys.accessUrl, dbData.keys.accessKeyId, dbData.keys.secretAccessKey);
+            const client = getS3Client(dbData.keys.accessUrl, dbData.keys.accessKeyId, dbData.keys.secretAccessKey, dbData.keys.region);
             try {
                 const r = await client.send(new DeleteBucketCommand({ Bucket: dbData.keys.bucketName }));
                 console.log("Delete bucket response meta:", r.$metadata);
