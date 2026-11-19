@@ -19,6 +19,9 @@ export const auth = betterAuth({
         enabled: true, 
         revokeSessionsOnPasswordReset: true, 
     },
+    rateLimit: {
+        enabled: false
+    },
     hooks: {
         before: createAuthMiddleware(async(ctx)=>{
             if (ctx.path.startsWith("/sign-up")){
@@ -147,6 +150,9 @@ export const auth = betterAuth({
                     minExpiresIn: 0,
                 },
                 enableMetadata: true,
+                rateLimit: {
+                    enabled: false
+                }
             }
         ])
     ]

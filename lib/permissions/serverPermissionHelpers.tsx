@@ -2,7 +2,7 @@ import 'server-only'
 import { headers } from "next/headers";
 import { auth } from "../auth";
 import { User } from "../schema/schemaTypes";
-import { CustomHttpError, InsufficientPermissionsError, UnauthorisedError } from "../errors";
+import { CustomHttpError, InsufficientPermissionsError, RateLimitedError, UnauthorisedError } from "../errors";
 import { NextRequest } from "next/server";
 import { unstable_rethrow } from "next/navigation";
 import { ApiKey } from '@better-auth/api-key';
@@ -55,7 +55,9 @@ export async function userHasPermissionServer(
 export function errorToResponse(error: unknown): Response {
     unstable_rethrow(error)
     if (error instanceof CustomHttpError) {
-        return Response.json({ error: error.name, message: error.message },{ status: error.status_code })
+        const {status_code, name, message, ...errorData} = error;
+        console.log("Returning error response:", {status_code, name, message: error.message, ...errorData})
+        return Response.json({error: name, message: error.message, ...errorData },{ status: error.status_code })
     }
     console.error(error)
     return Response.json({ error: 'INTERNAL', message: "An unexpected error occured"}, { status: 500 })
@@ -101,6 +103,9 @@ export function verifyAPIKey<C extends { params: Promise<unknown> }>(handler: (r
                 },
             });
             if (!data.valid || !data.key) {
+                if (data.error?.code == "RATE_LIMITED"){
+                    return errorToResponse(new RateLimitedError("Rate limit exceeded.", (data.error as any).details.tryAgainIn));
+                }
                 return errorToResponse(new UnauthorisedError());
             }
             const finalKey = {...data.key};

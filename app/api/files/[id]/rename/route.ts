@@ -57,7 +57,7 @@ export const PATCH = verifyAPIKeyOrCodeOrUser("RENAME_FILE", async (req, ctx: { 
                 return errorToResponse(error);
             }
         }
-        await db.update(files).set({name: data.name}).where(eq(files.id, id));
+        await db.update(files).set({name: data.name, updatedAt: new Date()}).where(eq(files.id, id));
         await makeAppLog({appId: file.applicationId, code: "FILE_EDITED", data: {oldName: file.name, newName: data.name}, userId: user?.id, apiKeyId: apiKey?.id});
         await makeDbLog({dbId: file.databaseId, code: "FILE_EDITED", data: {oldName: file.name, newName: data.name}, userId: user?.id, appId: file.applicationId});
         await updateRequestsAnalyticsEvent({increment: 1, appId: file.applicationId, timezone: siteConfig.general.timezone});
