@@ -22,6 +22,7 @@
       {
         "group": "Dashboard",
         "pages": [
+          "dashboard/demo",
           "dashboard/installation",
           "dashboard/deploying"
         ]

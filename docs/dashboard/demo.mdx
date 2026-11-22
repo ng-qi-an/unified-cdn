@@ -1,0 +1,126 @@
+---
+title: Demo
+description: Get started with Unified CDN without installing it.
+---
+To make trying Unified CDN easier, i've set up a **demo dashboard** of Unified CDN that you can try out. You can use the demo first to see if Unified CDN is right for you before you commit. 
+
+The rest of this page will contain a **basic guide** on using Unified CDN.
+
+<Warning>
+    The demo instance is reset daily at 12:00 AM UTC. All data will be wiped, including user accounts, databases, applications and uploaded files.
+</Warning>
+<Columns cols={2}>
+    <Column>
+        **What you can do**
+        - **Sign up** as an admin user on the dashboard
+        - Manage and create **normal user** accounts
+        - **Create Databases** to connect to your file storage service
+        - **Create Applications** that can be used in Playground
+        - **Upload files** to your file storage service and manage them
+    </Column>
+    <Column>
+        **What you cannot do**
+        - Create a **Super Admin** account (requires self-hosting)
+        - **Access other's** files or databases
+        - Edit the demo instance's **configuration**
+        - Use the demo instance for **production purposes**
+    </Column>
+</Columns>
+
+In conjunction with the demo instance, i've also set up **Playground**. This allows you to see how Unified CDN would work in **real life**, showcasing Unified CDN being integrated in different services.
+
+**I recommend you to have both the Dashboard and Playground open for testing.**
+
+<Columns cols={2}>
+  <Card title="Open Playground" icon="flask-conical" horizontal href="https://playground.unified-cdn.ngqian.com" arrow="true">
+    Test in a real-world scenario.
+  </Card>
+  <Card title="Open Demo" icon="laptop-minimal" horizontal href="https://demo.unified-cdn.ngqian.com" arrow>
+    Try out the demo dashboard.
+  </Card>
+</Columns>
+
+## Getting started
+Learn how to use the Dashboard and the Playground to manage your files and integrate Unified CDN into your projects.
+### Creating an account
+Head to the Demo dashboard. You should be presented with a Sign In page as seen below. Click on the **Sign Up** button to create an account.
+
+<img src="/screenshots/demo/sign-up-form.png" alt="Screenshot of the sign up form" className="w-[300px]" />
+
+You'll be prompted for a name, email and password. Fill in the details and click **Sign Up**. You should be redirected to the dashboard.
+
+### Creating your first Database
+A **Database** is the **first layer** between your file storage service and Unified CDN. Each file storage service (For example a single S3 bucket) has it's own Database. **Applications** can then be **added** to the database for use in your projects.
+
+<Note>
+    If you don't want to link your own file storage service, skip to the [Create your first Application](#create-your-first-application) section. You will then use the Demo database provided.
+</Note>
+First, navigate to the **Databases** page on the left sidebar. It should be under the section labelled **Management**.
+<Info>
+    Normal users are unable to create Databases! Only admins can create them.
+</Info>
+
+Then, click on the **Create new** button at the top right of the page. You should be brought to the **Create Databases** page, as seen below:
+![Screenshot of the create database form](/screenshots/demo/database-create-form.png)
+
+1. Start by filling in the **name** of your Database. It can be anything, but cannot overlap with another user's database.
+2. Keep the visibility as **Private**. Making it public will allow any user to create Applications under your Database, even if they are non-admins.
+3. Set **Alerts** using the slider or the input box. The **global alerts** is the maximum total file size the database can be before no files are accepted.
+4. Choose a **file-storage provider**. This is the service that will store your files. After choosing a provider, fill in the required data, and you're good to go!
+<Tip>
+    Public databases can be seen by any admin and used by anyone, but only you can see all the files and configure it. Super Admins are exempt, and have full access no matter if it's public.
+</Tip>
+### Create your first Application
+Once you have a database set up, you can create an **Application**. Applications are subsets of **Databases**, allowing you to group files by projects without having to key in file storage credentials again. This is the layer that your project connects directly to.
+
+**Each project** you make, for example a *photo sharing app*, or an *AI chatbot*, should have it's **own** Application, but they can **share** the same Database. An application **cannot access** the files of **another** even if they are in the same Database.
+
+First, navigate to the **Applications** page on the left sidebar. It should be under the section labelled **Navigation**.
+
+Then, click on the **Create new** button at the top right of the page. You should be brought to the **Create Application** page, as seen below:
+![Screenshot of the create application form](/screenshots/demo/application-create-form.png)
+1. Start by filling in the **name** of your Application. It can be anything, but cannot overlap with another user's application.
+2. Choose the **Database** you want to link this Application to. You can only choose from the Databases you have created, or the Demo database provided.
+3. You should see a visualisation of the relationship between your project, Application and Database.
+4. Once everything looks good, click on **Create Application**.
+<Note>
+    Admin users can create applications freely, but normal users must request applications before being allowed to use them. Admins can then authorise a user's request for an Application.
+</Note>
+### Managing your files
+Once you're redirected to your Application's page, you can navigate to the **Files tab** to begin **managing files**. It should look like this:
+![Screenshot of an application's files page](/screenshots/demo/application-files-page.png)
+The files tab is where you can view all the files uploaded to your Application, either by an API key or from the dashboard. To test how it looks, click on **Upload files**.
+<Info>
+    You may have noticed that **Upload files** is disabled on a Database's file page. This is because files **must** be linked to an Application to **organise** files neatly and prevent files from being **accidentally forgotten** and orphaned.
+</Info>
+From the files tab, you will be able to **rename**, **delete** and **download** files. You can also do these through the [API](/api/authentication).
+### Creating your first API key
+Navigate to the **API keys** tab on your Application. Then, click **Create API key**. You should see a form like this:
+![Screenshot of the create API key form](/screenshots/demo/api-keys-create-form.png)
+1. Fill in a name for your new **API key**. This is for your own reference, and can be anything.
+2. Turn on **expiry** for your API key. This is recommended as you wouldn't want to **expose access** to your storage service for too long on a **demo site**. On your **own instance**, an indefinite API key is **fine**.
+3. Set an **expiry date**. This date must be in the **future**, and is auto-set to when you navigated to the API keys page so you will need to change it.
+4. Make sure to **copy** the API key after creating it, as you will **not be able to see it again**. You can always create a new one if you lose it.
+### Using the API key
+Once you have an API key, you can use it in **Playground** *(recommended for this guide!!)* or in the [API docs](/api/authentication). The rest of this guide will be using Playground.
+
+On the Playground, you should be greeted with a landing page like below:
+![Screenshot of the playground landing page](/screenshots/demo/playground-landing-page.png)
+
+Click on **Start** to begin.
+
+Since you've already created an API key, let's fill in your credentials in the **API Server switcher** on the top right of the screen:
+![Screenshot of the API server switcher](/screenshots/demo/playground-api-switcher-popup.png)
+1. Fill in https://demo.unified-cdn.ngqian.com as the **API Server URL**.
+2. Paste in the API key you copied earlier as the **AP  I Key**.
+3. Click **Save** to validate your credentials. It may take a few seconds, so be patient!
+
+The file you've uploaded earlier should show up in the **Photo Library** now (if it was a photo), and you can upload more photos.
+
+### How was Unified CDN used?
+To see how this page (or the Editor and Chat) were intergrated with Unified CDN, you can click on the **Source** button on the bottom right of the screen. A popup should appear like so:
+![Screenshot of the source code popup](/screenshots/demo/playground-source-popup.png)
+To see the full page, you can click the **Open in new tab** button on the top right of the code block. For more information on the Playground, visit the [Playground Github](https://github.com/ng-qi-an/unified-cdn-playground).
+
+## Deploy your own
+Ready to try out Unified CDN on your own now? Check out the [installation](/dashboard/installation) page to continue the next part of this guide!

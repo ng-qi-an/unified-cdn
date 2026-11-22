@@ -7,27 +7,23 @@ So far, you have installed Unified CDN and ran it in development mode. Now, you 
 1. You have completed the [installation](/dashboard/installation) steps and have a working Unified CDN instance.
 2. You have a domain name and a **server** to host Unified CDN. This can be a VPS, cloud server, or any other hosting solution that **supports Node.js**.
 <Warning>
-  **You must not use a serverless platform to host**.
+  **You should not use a serverless platform to host**.
   
   Serverless platforms like Vercel and Netlify are not suitable as they often impose a max request body payload, blocking files from being uploaded directly to Unified CDN. [See here](https://vercel.com/docs/functions/limitations#request-body-size) for more information.
+
+  If you want to, check if your serverless platform allows you to increase the max request body payload. If it does, you can host Unified CDN on it.
 </Warning>
 
 ## Build step
 <Tabs>
   Unified CDN is made with Next.js and comes **unbuilt**. To push it to production, you have to first build the project. Run the following command in your terminal:
   <Tab title="Node">
-    <Info>
-      Before running any commands, make sure the `OUTPUT_METHOD` variable in your `.env` file is set to `node`. This will ensure that Unified CDN is built for a Node.js environment.
-    </Info>
     Run the build script using npm:
     ```bash
     npm run build
     ``` 
   </Tab>
   <Tab title="Docker">
-  <Info>
-    Before running any commands, make sure the `OUTPUT_METHOD` variable in your `.env` file is set to `docker`. This will ensure that Unified CDN is built for a Node.js environment.
-  </Info>
   Unified CDN already comes with a Dockerfile (modified from the guide [here](https://docs.docker.com/guides/nextjs/)) Build the image using docker build:
 
   ```bash

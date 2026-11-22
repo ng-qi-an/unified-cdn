@@ -6,17 +6,22 @@ import { BetterAuthSecretGenerator } from "/snippets/BetterAuthSecretGenerator.j
 
 Unified CDN is self-hosted, and runs on pretty much any device connected to the internet. You can deploy Unified CDN for an organisation, your team, or yourself.
 
+
+<Tip>
+  Don't want to install yet? Try out the [demo](/dashboard/demo) first!
+</Tip>
+
 ## Prerequisites
 
 Before you begin, you must have:
 
 - A **device/server capable** of running a web server (minimum 0.5GB of ram)
 - A **postgres** database that your device can reach. (Serverless platforms like Neon works!)
-- Installed [Node.js](https://nodejs.org/en/download) (minimally v20.9.0) & [Git](https://git-scm.com/install/)
+- Installed [Node.js](https://nodejs.org/en/download) (minimally v20.9.0) & [Git](https://git-scm.com/install/) - This is **highly recommended** but optional if you're using Docker later.
 - Reasonable knowledge of git and using the **terminal**.
 
-## Get started
 
+## Get started
 <Steps>
   <Step title="Install">
     Choose where Unified CDN should be stored, then clone the Unified CDN repository from Github on your device using git.
@@ -62,7 +67,7 @@ Before you begin, you must have:
     BETTER_AUTH_SECRET=YOUR_GENERATED_SECRET_KEY
     ```
   </Step>
-  <Step title="Configure a database">
+  <Step title="Add a database">
   Unified CDN uses a Postgres database, which are relational in nature and easier to develop with. You can use a Postgres database hosted on your server, a cloud service, or serverless platforms like [Neon](https://neon.tech/).
     <Tabs>
       <Tab title="Hosted postgres">
@@ -85,23 +90,21 @@ Before you begin, you must have:
       </Tab>
     </Tabs>
   </Step>
-  <Step title="Configure deployment">
-    Unified CDN can be ran in two ways: **Node.js** or **Docker**. Choose one of the two methods below, and set the `OUTPUT_METHOD` variable in your `.env` file accordingly.
-    <Tabs>
-      <Tab title="Node">
-      For running directly with `npm run start`. This is the default.
-        ```env .env
-        OUTPUT_METHOD=node
-        ```
-      </Tab>
-      <Tab title="Docker">
-      For running in docker to containerise Unified CDN.
-        ```env .env
-        OUTPUT_METHOD=docker
-        ```
-      </Tab>
-    </Tabs>
-    This will be used **later** in the deployment step.
+  <Step title="Migrate your database">
+  <Info>
+    If you're using Docker and did not install Node.js on your machine directly, you can clone the repository directly on your local device first.
+    
+    Repeat the steps above locally, migrate the database, then delete the repository on your local device. Your database will be migrated accordingly.
+  </Info>
+  We use **Drizzle** to manage database migrations. Run the following command to generate a migration schema:
+    ```bash
+    npx drizzle-kit generate
+    ```
+  Then run the following command to migrate your database:
+    ```bash
+    npx drizzle-kit migrate
+    ```
+  If the migration fails, check if your database URL is valid first.
   </Step>
   <Step title="Test it">
     **Congratulations, you have installed Unified CDN!** If you want to, you can test your configuration before deploying to production. This is optional.
