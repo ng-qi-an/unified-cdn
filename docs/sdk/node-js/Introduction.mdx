@@ -1,0 +1,69 @@
+---
+title: Introduction
+description: Get started with using the Unified CDN SDK for Node.js.
+---
+The **Node.js Unified CDN SDK** allows you to easily integrate Unified CDN into your applications by providing a **simple and consistent** API for interacting with Unified CDN. 
+
+It abstracts away the complexity of making *HTTP requests* and *handling responses*, achieving our goal for improving **developer experience**.
+
+## Get started
+<Steps>
+    <Step title="Installing the package">
+        Install the Unified CDN SDK for Node.js using npm:
+        ```bash
+        npm install unified-cdn-api
+        ```
+    </Step>
+    <Step title="Create a Unified CDN instance">
+        Create a new instance of the Unified CDN client:
+        ```ts ucdn.ts
+        import { UnifiedCDN } from 'unified-cdn-api';
+
+        // apiUrl and apiKey are inferred from `UNIFIED_CDN_API_URL` and `UNIFIED_CDN_API_KEY` respectively in your .env file.
+        export const unifiedCDN = new UnifiedCDN();
+        /* Or if your project does not use .env variables,
+        export const unifiedCDN = new UnifiedCDN({
+            apiUrl: 'https://your-unified-cdn-instance.com',
+            apiKey: 'your-api-key'
+        });
+        */
+        ```
+    </Step>
+    <Step title="Use it in your app">
+    ```ts index.ts
+        import { unifiedCDN } from './ucdn';
+
+        const response = await unifiedCDN.getAllFiles()
+        console.log(response);
+    ```
+    Explore more methods in the [UnifiedCDN Class](/sdk/node-js/classes/UnifiedCDN).
+    </Step>
+</Steps>
+## Using with Next.js
+Unified CDN SDK can also be used in Next.js client side code.
+<Steps>
+    <Step title="Set up Unified CDN instance">
+        Follow the steps [above](#get-started).
+    </Step>
+    <Step title="Create Unified CDN Client instance">
+        ```ts ucdn-client.ts
+        import { UnifiedCDNClient } from 'unified-cdn-api';
+        export const ucdnClient = new UnifiedCDNClient() // Set the .env variable `NEXT_PUBLIC_UNIFIED_CDN_API_URL` to your Unified CDN instance URL.
+        /* If your project does not use .env variables or your Next.js unified-cdn api routes are not based at /api/unified-cdn:
+        export const ucdnClient = new UnifiedCDNClient({
+            apiUrl: 'https://your-unified-cdn-instance.com',
+            baseUrl: "/api/unified-cdn" // optional, can leave blank unless your Next.js unified-cdn api routes are not based at /api/unified-cdn.
+        });
+        */
+        ```
+    </Step>
+    <Step title="Create API route">
+        ```ts api/unified-cdn/[...all]/route.ts
+        import { unifiedCDN } from '@/ucdn';
+        export const POST = toNextHandler(unifiedCDN, {
+            // More options
+        })
+        ```
+        For options on configuring the handler, go to the [Next.js API Handler](/sdk/node-js/handlers/nextjs/toNextHandler).
+    </Step>
+</Steps>

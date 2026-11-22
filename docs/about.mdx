@@ -1,0 +1,41 @@
+---
+title: About
+description: Why did I make Unified CDN, and how does it work?
+---
+## Rationale
+Unified CDN was created to solve the problem of managing multiple file storage providers, and having to learn completely different APIs to access them on different projects.
+
+For example, I may use Hackclub CDN for a simpler project, and Cloudflare R2 for a more high performant one. Both APIs were vastly different inconvenient, needing numerous lines of code to achieve a simple task like uploading a file.
+
+Additionally, the UI for managing files differs between providers, and some are more limited or hard to use. Unified CDN aims to make the UI the same across all providers, making for a better DX.
+
+### Why Unified CDN?
+- Unified CDN provides a **single API** for all file storage providers, making it easier to manage files across multiple providers.
+- Theres also an **admin dashboard** for managing files, databases and applications, making it easier to manage files across multiple providers.
+- The **User access control** system makes it easy for you to share the same database and manage team members or friends without exposing your file storage provider's credentials.
+- Unified CDN is also **open source**, so you can host your own instance, and have full control over your files and data.
+- Finally, Unified CDN provides **extras**, such as **grant codes** for providers that don't have pre-signed URLs (Hackclub CDN)
+
+## How does it work?
+Unified CDN works by acting as a **proxy** between your application and your file storage provider with 2 key layers: **Databases** and **Applications**.
+- **Databases** - The first layer where Eech file storage provider has its own Database, and each Database can have multiple applications. Databases are where files are stored and linked.
+- **Applications** - The second layer between your project and Unified CDN. Each application is linked to a database, and can only access the files uploaded to it. This allows you to manage multiple applications from the same database in an organised way.
+- **Files** - Files are an abstract interface built on top of "Objects" in your file storage provider. They allow your projects to query data about your files without having to send requests to your provider, saving on Egress fees.
+
+Your project then obtains an **API key** from your Application, which is used to access files, or upload files through the Database to your file storage provider.
+
+## Technical details
+The dashboard and API are built with **Next.js** for it's **server-side rendering** capabilities, and it's flexible API system.
+
+The database is built with **PostgreSQL**, which is perfect for creating relations between files, databases, and applications. The database was used with **Drizzle ORM**, which provides type-safe methods for interacting with an SQL database.
+
+The authentication system is built with **BetterAuth**, which provides a highly customisable way for managing user records, building access control, and handling auth tokens. The plugins are extremely flexible, making it easy to add new features.
+
+The design of the dashboard is built with **TailwindCSS** for easy styling, and **ShadcnUI** for the reusble and beautiful components.
+
+Finally, alot of the backgrounds and text effects are from **React bits**.
+
+## AI Usage
+AI was used for **autocomplete**, and to aid in working through **difficult tasks** such as building *analytics* and making *streamed uploads*. It did not generate a single feature on it's **own**, but helped me with *debugging* and *math stuff* I couldn't wrap my head around.
+
+The **design** is **completely handwritten**, with no AI used in generating pages or components.

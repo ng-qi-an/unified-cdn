@@ -16,7 +16,8 @@
       {
         "group": "Getting started",
         "pages": [
-          "index"
+          "index",
+          "about"
         ]
       },
       {
@@ -58,6 +59,79 @@
               "GET /grant-codes/get",
               "DELETE /grant-codes/delete"
             ] 
+          }
+        ]
+      },
+      {
+        "group": "Node.js SDK",
+        "sdk": {
+          "format": "typedoc",
+          "source": "sdk/node-js/typedoc.json",
+          "directory": "sdk/node-js"
+        },
+        "pages": [
+          "sdk/node-js/Introduction",
+          {
+            "group": "Classes",
+            "expanded": true,
+            "pages": [
+              "sdk/node-js/classes/UnifiedCDN",
+              "sdk/node-js/classes/UnifiedCDNFile"
+            ]
+          },
+          {
+            "group": "Client",
+            "expanded": true,
+            "pages": [
+              "sdk/node-js/client/UnifiedCDNClient"
+            ]
+          },
+          {
+            "group": "Errors",
+            "expanded": true,
+            "pages": [
+              "sdk/node-js/errors/APIError",
+              "sdk/node-js/errors/InsufficientPermissionsError",
+              "sdk/node-js/errors/InvalidConfigurationError",
+              "sdk/node-js/errors/NotFoundError",
+              "sdk/node-js/errors/RateLimitedError",
+              "sdk/node-js/errors/UnauthorisedError",
+              "sdk/node-js/errors/UnknownError"
+            ]
+          },
+          {
+            "group": "Handlers",
+            "expanded": true,
+            "pages": [
+              {
+                "group": "Next.js",
+                "expanded": true,
+                "pages": [
+                  "sdk/node-js/handlers/nextjs/toNextHandler"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Type Aliases",
+            "expanded": true,
+            "pages": [
+              "sdk/node-js/types/FlexibleAPI",
+              {
+                "group": "Next.js Handler Options",
+                "expanded": true,
+                "pages": [
+                  "sdk/node-js/types/NextUnifiedCDNHandlerOptions",
+                  "sdk/node-js/types/NextClientOptions",
+                  "sdk/node-js/types/NextUploadsOptions",
+                  "sdk/node-js/types/NextUploadsDataOptions",
+                  "sdk/node-js/types/NextUploadsBeforeHook"
+                ]
+              },
+              "sdk/node-js/types/RawUnifiedCDNFile",
+              "sdk/node-js/types/RawUnifiedCDNGrantCode",
+              "sdk/node-js/types/UnifiedCDNFileJSON"
+            ]
           }
         ]
       }
