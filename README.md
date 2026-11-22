@@ -1,5 +1,6 @@
 ![Unified CDN promotional banner](/public/unified-cdn-promo-banner.png)
-# ☁️ Unified CDN 📂
+<h1 align="center"> ☁️ Unified CDN 📂</h1>
+
 Unified CDN is a robust, **all-in-one** file storage network. It works as a proxy, sitting between your application and various file storage providers, and adding features across all your providers.
 
 Visit the [documentation](https://docs.unified-cdn.ngqian.com) to deploy and set up.
