@@ -98,7 +98,7 @@ export default function GeneralSiteSettings({siteConfig}: {siteConfig: GetSiteCo
                     <Field orientation="horizontal">
                         <div className="w-full">
                             <FieldLabel>Demo Mode</FieldLabel>
-                            <FieldDescription>Enable demo mode for the site. <Link href="https://unified-cdn-docs.ngqian.com" target="_blank">Learn more.</Link></FieldDescription>
+                            <FieldDescription>Enable demo mode for the site. <Link href="https://docs.unified-cdn.ngqian.com" target="_blank">Learn more.</Link></FieldDescription>
                         </div>
                         <Switch checked={demoMode} onCheckedChange={(checked)=> setDemoMode(checked)}/>
                     </Field>
