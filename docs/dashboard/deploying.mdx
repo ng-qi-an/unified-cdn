@@ -24,10 +24,20 @@ So far, you have installed Unified CDN and ran it in development mode. Now, you 
     ``` 
   </Tab>
   <Tab title="Docker">
+  <Tip>
+    We recommend you to use the [Docker Compose](#docker-compose) method. Docker Compose simplifies the process of building and running Docker containers, especially with multiple configurations.
+  </Tip>
   Unified CDN already comes with a Dockerfile (modified from the guide [here](https://docs.docker.com/guides/nextjs/)) Build the image using docker build:
 
   ```bash
   docker build -f Dockerfile.docker  --secret id=envfile,src=.env -t unified-cdn .
+  ```
+  </Tab>
+  <Tab title="Docker Compose">
+  Unified CDN already provides  a `docker-compose.yml` file. To use it for build, run the command below:
+
+  ```bash
+  docker compose build
   ```
   </Tab>
 </Tabs>
@@ -58,14 +68,32 @@ Once the build step is completed, you can host it on your server.
   <Tab title="Docker">
     Create and run a **docker container** from the image built:
     ```bash
-    docker run --name unified-cdn -d --env-file .env -p 3000:3000 unified-cdn
+    docker run --name unified-cdn -d --env-file .env -p "${HOST_PORT:-3000}:3000" --memory="${MEM_LIMIT:-512m}" --memory-swap="${MEMSWAP_LIMIT:-1g}" --restart unless-stopped unified-cdn
     ```
-    You can now access it at port `3000`. To use a different port, simply modify the `-p` flag: `-p [host_port]:[container_port]`
+    You can now access it at port `3000`. To use a different port, modify the `HOST_PORT` variable in the `.env` file.
 
     Use the container name `unified-cdn` to start, stop or restart Unified CDN. For example, to restart Unified CDN, run:
     ```bash
     docker restart unified-cdn
     ```
+    <Info>
+      Make sure to run `sudo systemctl enable docker` to ensure that Docker starts on boot. Otherwise, if your machine reboots, Unified CDN won't start automatically.
+    </Info>
+  </Tab>
+  <Tab title="Docker Compose">
+    The `docker-compose.yml` file is already provided in the repository. To use it, run the command below:
+    ```bash
+    docker compose up -d
+    ```
+    You can now access it at port `3000`. To use a different port, simply modify the `HOST_PORT` variable in the `.env` file.
+
+    Use docker compose commands in the project root to start, stop or restart Unified CDN. For example, to restart Unified CDN, run:
+    ```bash
+    docker compose restart
+    ```
+    <Info>
+      Make sure to run `sudo systemctl enable docker` to ensure that Docker starts on boot. Otherwise, if your machine reboots, Unified CDN won't start automatically.
+    </Info>
   </Tab>
 </Tabs>
 ## Updates
@@ -80,9 +108,16 @@ When a new version of Unified CDN is released, you can update your instance by f
     ```
     </Tab>
     <Tab title="Docker">
-    Stop Unified CDN with Docker:
+    Stop and delete the Unified CDN container with Docker:
     ```bash
-    docker stop unified-cdn
+    docker container stop unified-cdn
+    docker container rm unified-cdn
+    ```
+    </Tab>
+    <Tab title="Docker Compose">
+    Navigate to the project root and stop Unified CDN with Docker compose:
+    ```bash
+    docker compose down
     ```
     </Tab>
   </Tabs>
@@ -104,20 +139,35 @@ When a new version of Unified CDN is released, you can update your instance by f
       <Tab title="Docker">
         No need to install packages manually. The Dockerfile handles this.
       </Tab>
+      <Tab title="Docker Compose">
+        No need to install packages manually. The Dockerfile handles this.
+      </Tab>
     </Tabs>
+  </Step>
+  <Step title="Migrate database">
+    If the update includes database changes, you will need to migrate your database. Run the following command to push changes to your database:
+      ```bash
+      npx drizzle-kit push  
+      ```
   </Step>
   <Step title="Rebuild Unified CDN">
   <Tabs>
     <Tab title="Node">
       Rebuild Unified CDN to apply the updates:
-    ```bash
-    npm run build
-    ```
+      ```bash
+      npm run build
+      ```
     </Tab>
     <Tab title="Docker">
       Rebuild Unified CDN to apply the updates:
+      ```bash
+      docker build -f Dockerfile.docker  --secret id=envfile,src=.env -t unified-cdn .
+      ```
+    </Tab>
+    <Tab title="Docker Compose">
+      Rebuild Unified CDN to apply the updates:
     ```bash
-    docker build --secret id=envfile,src=.env -t unified-cdn .
+    docker compose build
     ```
     </Tab>
   </Tabs>
@@ -133,7 +183,13 @@ When a new version of Unified CDN is released, you can update your instance by f
       <Tab title="Docker">
         Restart Unified CDN with Docker:
       ```bash
-      docker restart unified-cdn
+      docker run --name unified-cdn -d --env-file .env -p "${HOST_PORT:-3000}:3000" --memory="${MEM_LIMIT:-512m}" --memory-swap="${MEMSWAP_LIMIT:-1g}" --restart unless-stopped unified-cdn
+      ```
+      </Tab>
+      <Tab title="Docker Compose">
+        Restart Unified CDN with Docker compose:
+      ```bash
+      docker compose up -d
       ```
       </Tab>
     </Tabs>

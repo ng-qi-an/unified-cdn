@@ -1,6 +1,11 @@
 services:
   app:
     image: '${IMAGE:-unified-cdn}'
+    build:
+      context: .
+      dockerfile: Dockerfile.docker
+      secrets:
+        - envfile
     restart: unless-stopped
     ports:
       - '${HOST_PORT:-3000}:3000'
@@ -8,3 +13,6 @@ services:
     memswap_limit: ${MEMSWAP_LIMIT:-1g}
     env_file:
       - .env
+secrets:
+  envfile:
+    file: .env
