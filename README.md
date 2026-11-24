@@ -16,6 +16,18 @@ Not ready yet? Visit the [demo](https://docs.unified-cdn.ngqian.com/dashboard/de
 - Self-hosted: Runs on your own servers so ur files always stay **yours**!
 - Comprehensive docs: So you never get **confused or lost** 
 
+## Screenshots
+| Dashboard | Analytics |
+| :---: | :---: |
+| <img width="1686" height="986" alt="image" src="https://github.com/user-attachments/assets/10b830f4-92c1-4f91-bf72-3e1260970f5f" /> | <img width="1686" height="986" alt="image" src="https://github.com/user-attachments/assets/adcf42db-0958-48e1-bf1b-95ad0ba10590" /> |
+| Applications  | File explorer |
+| <img width="1686" height="986" alt="image" src="https://github.com/user-attachments/assets/91185fe0-b545-45e2-a916-3fc92d62d50c" /> | <img width="1686" height="986" alt="image" src="https://github.com/user-attachments/assets/b634955d-e97d-42ad-95d0-51adfc8d1e22" /> |
+| Databases | Logs |
+| <img width="1686" height="986" alt="image" src="https://github.com/user-attachments/assets/abebb0c3-5097-4629-ae56-bac47ef24f58" /> | <img width="1686" height="986" alt="image" src="https://github.com/user-attachments/assets/7639641e-382c-4999-ae59-92e970b3c35c" /> |
+| Users | Site settings |
+| <img width="1686" height="986" alt="image" src="https://github.com/user-attachments/assets/7fa52fce-2d92-476e-ab70-b84e5d9f83bc" /> | <img width="1686" height="986" alt="image" src="https://github.com/user-attachments/assets/83c00f3f-4a5c-446e-91c3-cd6d97ef20fb" />
+
+
 ## What I've learned
 
 This project had many firsts, and I think it's the hardest thing I've ever attempted. I've also challenged myself to make everything extremely thorough and detailed, such as the overly docs site and the interactive playground.
