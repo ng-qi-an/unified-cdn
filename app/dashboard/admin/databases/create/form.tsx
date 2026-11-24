@@ -68,7 +68,7 @@ export function CreateDatabasesForm({fetchedDatabases, createPerms}: {fetchedDat
                         accessKeyId: accessKeyId,
                         secretAccessKey: secretAccessKey,
                         bucketName: bucketName,
-                        region: region.trim() || undefined
+                        region: region.trim()
                     } : provider == "hackclub-cdn" ? {
                         apiKey: apiKey
                     } : {},
